@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Simple.CommandLine\Simple.CommandLine.csproj" />
+    <ProjectReference Include="..\..\source\Simple.CommandLine\Simple.CommandLine.csproj" />
   </ItemGroup>
 
 </Project>

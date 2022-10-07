@@ -7,7 +7,6 @@
     <Nullable>enable</Nullable>
     <AssemblyName>sample</AssemblyName>
     <Description>Simple Command-Line Sample Application</Description>
-    <Authors>Andre Vianna</Authors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Simple.CommandLine\Simple.CommandLine.csproj" />
+    <ProjectReference Include="..\..\source\Simple.CommandLine\Simple.CommandLine.csproj" />
   </ItemGroup>
 
 </Project>

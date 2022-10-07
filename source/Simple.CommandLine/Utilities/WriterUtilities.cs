@@ -16,7 +16,7 @@ public static class WriterUtilities {
 
         writer.WriteLine();
         var arguments = command.GetTokenDescriptions(nameof(Argument));
-        var options = command.GetTokenDescriptions(nameof(Option));
+        var options = command.GetTokenDescriptions(nameof(Parameter));
         var commands = command.GetTokenDescriptions(nameof(Command));
         writer.WriteLine($"Usage: {command.Path}{(arguments.Length == 0 ? "" : " [arguments]")}{(options.Length == 0 ? "" : " [options]")}{(commands.Length == 0 ? "" : " [command]")}");
         writer.WriteSection("Arguments:", arguments);

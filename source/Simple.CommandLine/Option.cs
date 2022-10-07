@@ -1,61 +1,58 @@
 ﻿namespace Simple.CommandLine;
 
-public abstract class Option : Token
+public class Option : Parameter
 {
-    protected Option(IReadOnlyCollection<string> names, string? description = null, bool isShared = false)
-        : base(GetFirstName(names), description)
-    {
-        if (names.Any(string.IsNullOrWhiteSpace)) throw new ArgumentException("Value cannot contain null or empty values.", nameof(names));
-        IsShared = isShared;
-        Names = names.Select(i => i.Trim().TrimStart('-')).ToArray();
+    private readonly Action<Command>? _onRead;
+
+    public Option(IReadOnlyCollection<string> names, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
+        : base(names, description, isInheritable) {
+        _onRead = onRead;
     }
 
-    protected Option(string name, string? description = null, bool isShared = false)
-        : this(new[] { name }, description, isShared)
-    {
+    protected Option(string name, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
+        : this(new[] { name }, description, isInheritable, onRead) {
     }
 
-    internal bool IsShared { get; }
+    internal sealed override void Read(Command caller, ref Span<string> arguments, out bool terminate) {
+        terminate = true;
+        try {
+            terminate = false;
+            OnRead(caller);
+        }
+        catch (Exception ex) {
+            Writer.WriteErrorLine($"An error occurred reading option '{Name}'.", ex);
+        }
+    }
 
-    internal ICollection<string> Names { get; }
-    internal bool IsAlias(string alias) => Names.Contains(alias.Trim().TrimStart('-'), StringComparer.InvariantCultureIgnoreCase);
-
-    internal virtual void Read(Command caller, ref Span<string> arguments, out bool terminate) => OnRead(caller, out terminate);
-
-    protected virtual void OnRead(Command caller, out bool terminate) => terminate = false;
-
-    private static string GetFirstName(IReadOnlyCollection<string>? names) =>
-        names is null || names.Count == 0
-            ? throw new ArgumentException("Value cannot be null or empty.", nameof(names))
-            : names.First();
+    protected virtual void OnRead(Command caller) => _onRead?.Invoke(caller);
 }
 
-public abstract class Option<TValue> : Option
-{
-    protected Option(IReadOnlyCollection<string> names, string? description = null, bool isShared = false)
-        : base(names, description, isShared)
-    {
+public class Option<TValue> : Parameter {
+    private readonly Action<Command>? _onRead;
+
+    public Option(IReadOnlyCollection<string> names, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
+        : base(names, description, isInheritable) {
+        _onRead = onRead;
     }
 
-    protected Option(string name, string? description = null, bool isShared = false)
-        : base(name, description, isShared)
-    {
+    protected Option(string name, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
+        : this(new[] { name }, description, isInheritable, onRead) {
     }
 
     public TValue Value { get; private set; } = default!;
 
-    internal sealed override void Read(Command caller, ref Span<string> arguments, out bool terminate)
-    {
-        try
-        {
+    internal sealed override void Read(Command caller, ref Span<string> arguments, out bool terminate) {
+        try {
+            terminate = false;
             Value = Convert.ChangeType(arguments[0], typeof(TValue)) is TValue value ? value : default!;
             arguments = arguments[1..];
-            base.Read(caller, ref arguments, out terminate);
+            OnRead(caller);
         }
-        catch (Exception ex)
-        {
-            Writer.WriteErrorLine($"An error occurred reading option '{Name}'.", ex);
+        catch (Exception ex) {
             terminate = true;
+            Writer.WriteErrorLine($"An error occurred reading option '{Name}'.", ex);
         }
     }
+
+    protected virtual void OnRead(Command caller) => _onRead?.Invoke(caller);
 }

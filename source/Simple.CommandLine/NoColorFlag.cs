@@ -7,9 +7,6 @@ internal sealed class NoColorFlag : Flag
     {
     }
 
-    protected override void OnRead(Command caller, out bool terminate)
-    {
+    protected override void OnRead(Command caller) =>
         WriterUtilities.Colorize = false;
-        base.OnRead(caller, out terminate);
-    }
 }

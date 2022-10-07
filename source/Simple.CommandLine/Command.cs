@@ -1,27 +1,33 @@
 ﻿namespace Simple.CommandLine;
 
-public abstract class Command : Token
+public class Command : Token
 {
     private readonly Command? _parent;
+    private readonly Action<Command>? _onExecuting;
     private readonly IList<Argument> _arguments = new List<Argument>();
-    private readonly ICollection<Option> _options = new List<Option>();
+    private readonly ICollection<Parameter> _options = new List<Parameter>();
     private readonly ICollection<Command> _commands = new List<Command>();
 
-    protected Command(Command? parent, string name, string? description = null) : base(name, description)
+    public Command(Command? parent, string name, string? description = null, Action<Command>? onExecuting = null) : base(name, description)
     {
         _parent = parent;
+        _onExecuting = onExecuting;
         if (_parent is null) return;
-        foreach (var sharedOption in _parent._options.Where(i => i.IsShared).ToArray())
+        foreach (var inheritedOption in _parent._options.Where(i => i.IsInheritable).ToArray())
         {
-            AddOption(sharedOption);
+            _options.Add(inheritedOption);
         }
     }
 
-    public string Path => (_parent is null ? "" : _parent.Path + " ") + Name;
+    internal string Path => (_parent is null ? "" : _parent.Path + " ") + Name;
 
-    public void AddArgument(Argument argument) => _arguments.Add(argument);
+    public void AddArgument<T>(Argument<T> argument) => _arguments.Add(argument);
+
+    public void AddOption<T>(Option<T> option) => _options.Add(option);
 
     public void AddOption(Option option) => _options.Add(option);
+
+    public void AddFlag(Flag flag) => _options.Add(flag);
 
     public void AddSubCommand(Command command) => _commands.Add(command);
 
@@ -52,6 +58,11 @@ public abstract class Command : Token
         }
     }
 
+    protected virtual void Execute() {
+        if (_onExecuting == null) Writer.WriteHelp(this);
+        else _onExecuting.Invoke(this);
+    }
+
     protected T? GetOptionOrDefault<T>(string name) {
         var option = _options.OfType<Option<T>>().FirstOrDefault(i => i.Names.Contains(name.Trim().TrimStart('-'), StringComparer.InvariantCultureIgnoreCase));
         return option is null ? default : option.Value;
@@ -68,11 +79,9 @@ public abstract class Command : Token
         return flag?.IsEnable ?? false;
     }
 
-    protected virtual void Execute() => Writer.WriteHelp(this);
-
     internal string[] GetTokenDescriptions(string type) => type switch {
         nameof(Argument) => _arguments.Select(c => c.Describe(2, 20)).ToArray(),
-        nameof(Option) => _options.Select(c => c.Describe(2, 20)).ToArray(),
+        nameof(Parameter) => _options.Select(c => c.Describe(2, 20)).ToArray(),
         _ => _commands.Select(c => c.Describe(2, 20)).ToArray()
     };
 

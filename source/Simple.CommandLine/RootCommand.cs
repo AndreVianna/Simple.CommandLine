@@ -8,8 +8,8 @@ public class RootCommand : Command
     {
         AddOption(new VersionOption());
         AddOption(new HelpOption());
-        AddOption(new VerboseFlag());
-        AddOption(new NoColorFlag());
+        AddFlag(new VerboseFlag());
+        AddFlag(new NoColorFlag());
     }
 
     public void Execute(string[] arguments) => Execute(arguments.AsSpan());

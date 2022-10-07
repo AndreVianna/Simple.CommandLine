@@ -7,9 +7,6 @@ internal sealed class VerboseFlag : Flag
     {
     }
 
-    protected override void OnRead(Command caller, out bool terminate)
-    {
+    protected override void OnRead(Command caller) =>
         WriterUtilities.IsVerbose = true;
-        base.OnRead(caller, out terminate);
-    }
 }

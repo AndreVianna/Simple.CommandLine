@@ -1,36 +1,40 @@
 ﻿namespace Simple.CommandLine;
 
-public abstract class Argument : Token
-{
-    protected Argument(string name, string? description = null)
-        : base(name, description)
-    {
+public abstract class Argument : Token {
+    private readonly Action<Command>? _onRead;
+
+    protected Argument(string name, string? description = null, Action<Command>? onRead = null)
+        : base(name, description) {
+        _onRead = onRead;
     }
 
-    internal virtual void Read(Command caller, string argument, out bool terminate) => OnRead(caller, out terminate);
-    protected virtual void OnRead(Command caller, out bool terminate) => terminate = false;
+    internal virtual void Read(Command caller, string argument, out bool terminate) {
+        terminate = false;
+        OnRead(caller);
+    }
+
+    protected virtual void OnRead(Command caller) => _onRead?.Invoke(caller);
 }
 
-public abstract class Argument<TValue> : Argument
+public class Argument<TValue> : Argument
 {
-    protected Argument(string name, string? description = null)
+    public Argument(string name, string? description = null)
     : base(name, description)
     {
     }
 
     internal TValue Value { get; private set; } = default!;
 
-    internal override void Read(Command caller, string argument, out bool terminate)
+    internal sealed override void Read(Command caller, string argument, out bool terminate)
     {
-        try
-        {
+        try {
             Value = Convert.ChangeType(argument, typeof(TValue)) is TValue value ? value : default!;
             base.Read(caller, argument, out terminate);
         }
         catch (Exception ex)
         {
-            Writer.WriteErrorLine($"An error occurred reading argument '{Name}'.", ex);
             terminate = true;
+            Writer.WriteErrorLine($"An error occurred processing argument '{Name}'.", ex);
         }
     }
 }

@@ -3,11 +3,11 @@
 internal sealed class VersionOption : Option
 {
     public VersionOption()
-        : base("--version", "Show version information and exit.", false)
+        : base("--version", "Show version information and exit.")
     {
     }
 
-    protected override void OnRead(Command caller, out bool terminate)
+    protected override void OnRead(Command caller)
     {
         var assembly = Assembly.GetEntryAssembly()!;
         var name = assembly.GetName().Name;
@@ -15,6 +15,5 @@ internal sealed class VersionOption : Option
         var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
         Writer.WriteLine(description ?? name);
         Writer.WriteLine(version);
-        terminate = true;
     }
 }

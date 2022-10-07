@@ -6,9 +6,5 @@ internal sealed class HelpOption : Option
     {
     }
 
-    protected override void OnRead(Command caller, out bool terminate)
-    {
-        Writer.WriteHelp(caller);
-        terminate = true;
-    }
+    protected override void OnRead(Command caller) => Writer.WriteHelp(caller);
 }

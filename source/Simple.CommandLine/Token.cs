@@ -26,7 +26,7 @@ public abstract class Token
             case Argument when indent != 0:
                 builder.Append('<').Append(Name).Append('>');
                 break;
-            case Option option when indent != 0:
+            case Parameter option when indent != 0:
                 builder.AppendJoin('|', option.Names);
                 break;
             default:

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CliGenerator": {
+      "commandName": "Project",
+      "commandLineArgs": "rest create hello dad 423"
+    }
+  }
+}

@@ -4,13 +4,13 @@ public class Option : Parameter
 {
     private readonly Action<Command>? _onRead;
 
-    public Option(IReadOnlyCollection<string> names, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
-        : base(names, description, isInheritable) {
+    public Option(string name, char alias, string? description = null, bool isAvailableToChildren = false, Action<Command>? onRead = null)
+        : base(name, alias, description, isAvailableToChildren) {
         _onRead = onRead;
     }
 
-    protected Option(string name, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
-        : this(new[] { name }, description, isInheritable, onRead) {
+    protected Option(string name, string? description = null, bool availableToSubCommands = false, Action<Command>? onRead = null)
+        : this(name, '\0', description, availableToSubCommands, onRead) {
     }
 
     internal sealed override void Read(Command caller, ref Span<string> arguments, out bool terminate) {
@@ -30,13 +30,13 @@ public class Option : Parameter
 public class Option<TValue> : Parameter {
     private readonly Action<Command>? _onRead;
 
-    public Option(IReadOnlyCollection<string> names, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
-        : base(names, description, isInheritable) {
+    public Option(string name, char alias, string? description = null, bool isAvailableToChildren = false, Action<Command>? onRead = null)
+        : base(name, alias, description, isAvailableToChildren) {
         _onRead = onRead;
     }
 
-    protected Option(string name, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
-        : this(new[] { name }, description, isInheritable, onRead) {
+    protected Option(string name, string? description = null, bool availableToSubCommands = false, Action<Command>? onRead = null)
+        : this(name, '\0', description, availableToSubCommands, onRead) {
     }
 
     public TValue Value { get; private set; } = default!;

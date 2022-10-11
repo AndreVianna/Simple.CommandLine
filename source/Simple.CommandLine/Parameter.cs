@@ -1,27 +1,26 @@
-﻿namespace Simple.CommandLine;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
+
+namespace Simple.CommandLine;
 
 public abstract class Parameter : Token {
-    protected Parameter(IReadOnlyCollection<string> names, string? description = null, bool isInheritable = false)
-        : base(GetFirstName(names), description) {
-        if (names.Any(string.IsNullOrWhiteSpace))
-            throw new ArgumentException("Value cannot contain null or empty values.", nameof(names));
-        Names = names.Select(i => i.Trim().TrimStart('-')).ToArray();
-        IsInheritable = isInheritable;
+    private const string _validAliasPattern = "[a..zA..Z0..9]";
+    private static readonly Regex _validAlias = new(_validAliasPattern, RegexOptions.Compiled);
+
+    protected Parameter(string name, char alias, string? description = null, bool isAvailableToChildren = false)
+        : base(name, description) {
+        Alias = alias == '\0' ? null : alias.ToString();
+        if (Alias is not null && !_validAlias.IsMatch(Alias))
+            throw new ArgumentException($"Invalid value '{alias}'. Allowed values: '{_validAliasPattern}'.", nameof(alias));
+        IsAvailableToChildren = isAvailableToChildren;
     }
 
-    protected Parameter(string name, string? description = null, bool isInheritable = false)
-        : this(new[] { name }, description, isInheritable) {
-    }
+    internal bool IsAvailableToChildren { get; }
 
-    internal bool IsInheritable { get; }
+    internal string? Alias { get; }
 
-    internal ICollection<string> Names { get; }
-    internal bool IsAlias(string alias) => Names.Contains(alias.Trim().TrimStart('-'), StringComparer.InvariantCultureIgnoreCase);
+    internal override bool Is(string? alias) =>
+        base.Is(alias) || (Alias is not null && $"-{Alias}" == alias?.Trim());
 
     internal abstract void Read(Command caller, ref Span<string> arguments, out bool terminate);
-
-    private static string GetFirstName(IReadOnlyCollection<string>? names) =>
-        names is null || names.Count == 0
-            ? throw new ArgumentException("Value cannot be null or empty.", nameof(names))
-            : names.First();
 }

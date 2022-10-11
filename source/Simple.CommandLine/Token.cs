@@ -7,11 +7,13 @@ public abstract class Token
     protected Token(string name, string? description = null)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
-        Name = name.Trim();
+        Name = name.Trim().TrimStart('-');
         _description = description ?? string.Empty;
     }
 
     internal string Name { get; }
+
+    internal virtual bool Is(string? name) => name is not null && Name == name.Trim().ToLower();
 
     protected IOutputWriter Writer { get; set; } = new ConsoleOutputWriter();
 
@@ -27,7 +29,8 @@ public abstract class Token
                 builder.Append('<').Append(Name).Append('>');
                 break;
             case Parameter option when indent != 0:
-                builder.AppendJoin('|', option.Names);
+                builder.Append("--").Append(option.Name);
+                if (option.Alias is not null) builder.Append("|-").Append(option.Alias);
                 break;
             default:
                 builder.Append(Name);

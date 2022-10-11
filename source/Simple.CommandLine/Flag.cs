@@ -4,13 +4,13 @@ public class Flag : Parameter
 {
     private readonly Action<Command>? _onRead;
 
-    public Flag(IReadOnlyCollection<string> names, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
-        : base(names, description, isInheritable) {
+    public Flag(string name, char alias, string? description = null, bool isAvailableToChildren = false, Action<Command>? onRead = null)
+        : base(name, alias, description, isAvailableToChildren) {
         _onRead = onRead;
     }
 
-    public Flag(string name, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
-        : this(new []{ name }, description, isInheritable, onRead)
+    public Flag(string name, string? description = null, bool availableToSubCommands = false, Action<Command>? onRead = null)
+        : this(name, '\0', description, availableToSubCommands, onRead)
     {
     }
 

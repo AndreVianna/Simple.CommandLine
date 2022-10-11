@@ -13,21 +13,37 @@ public class Command : Token
         _parent = parent;
         _onExecuting = onExecuting;
         if (_parent is null) return;
-        foreach (var inheritedOption in _parent._options.Where(i => i.IsInheritable).ToArray())
-        {
+        foreach (var inheritedOption in _parent._options.Where(i => i.IsAvailableToChildren).ToArray()) {
             _options.Add(inheritedOption);
         }
     }
 
     internal string Path => (_parent is null ? "" : _parent.Path + " ") + Name;
 
-    public void AddArgument<T>(Argument<T> argument) => _arguments.Add(argument);
+    public void AddArgument<T>(Argument<T> argument) {
+        EnsureUniqueness(argument, nameof(argument));
+        _arguments.Add(argument);
+    }
 
-    public void AddOption<T>(Option<T> option) => _options.Add(option);
+    public void AddListOption<T>(ListOption<T> option) {
+        EnsureUniqueness(option, nameof(option));
+        _options.Add(option);
+    }
 
-    public void AddOption(Option option) => _options.Add(option);
+    public void AddOption<T>(Option<T> option) {
+        EnsureUniqueness(option, nameof(option));
+        _options.Add(option);
+    }
 
-    public void AddFlag(Flag flag) => _options.Add(flag);
+    public void AddOption(Option option) {
+        EnsureUniqueness(option, nameof(option));
+        _options.Add(option);
+    }
+
+    public void AddFlag(Flag flag) {
+        EnsureUniqueness(flag, nameof(flag));
+        _options.Add(flag);
+    }
 
     public void AddSubCommand(Command command) => _commands.Add(command);
 
@@ -64,18 +80,18 @@ public class Command : Token
     }
 
     protected T? GetOptionOrDefault<T>(string name) {
-        var option = _options.OfType<Option<T>>().FirstOrDefault(i => i.Names.Contains(name.Trim().TrimStart('-'), StringComparer.InvariantCultureIgnoreCase));
+        var option = _options.OfType<Option<T>>().FirstOrDefault(i => i.Is(name));
         return option is null ? default : option.Value;
     }
 
     protected T? GetArgumentOrDefault<T>(string name)
     {
-        var argument = _arguments.OfType<Argument<T>>().FirstOrDefault(i => i.Name.Equals(name.Trim(), StringComparison.InvariantCultureIgnoreCase));
+        var argument = _arguments.OfType<Argument<T>>().FirstOrDefault(i => i.Is(name));
         return argument is null ? default : argument.Value;
     }
 
     protected bool GetFlagOrDefault(string name) {
-        var flag = _options.OfType<Flag>().FirstOrDefault(i => i.Names.Contains(name.Trim().TrimStart('-'), StringComparer.InvariantCultureIgnoreCase));
+        var flag = _options.OfType<Flag>().FirstOrDefault(i => i.Is(name));
         return flag?.IsEnable ?? false;
     }
 
@@ -85,10 +101,17 @@ public class Command : Token
         _ => _commands.Select(c => c.Describe(2, 20)).ToArray()
     };
 
+    private void EnsureUniqueness(Token token, string name) {
+        if (_options.Any(i => i.Is(token.Name)))
+            throw new ArgumentException($"An argument, flag or option with the name '{token.Name}' already exists.", name);
+        if (token is Parameter parameter && _options.Any(i => i.Is(parameter.Alias)))
+            throw new ArgumentException($"A flag or option with the alias '{parameter.Alias}' already exists.", name);
+    }
+
     private bool TryReadOption(string name, ref Span<string> arguments, out bool terminate)
     {
         terminate = false;
-        var option = _options.FirstOrDefault(o => o.IsAlias(name));
+        var option = _options.FirstOrDefault(o => o.Is(name));
         if (option is null) return false;
         option.Read(this, ref arguments, out terminate);
         return true;

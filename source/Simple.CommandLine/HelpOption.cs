@@ -1,8 +1,8 @@
 ﻿namespace Simple.CommandLine;
 
-internal sealed class HelpOption : Option
+internal sealed class HelpOption : TerminalOption
 {
-    public HelpOption() : base(new[] { "--help", "-h" }, "Show this help information and exit.", true)
+    public HelpOption() : base("help", 'h', "Show this help information and exit.", true)
     {
     }
 

@@ -30,12 +30,13 @@ public static class WriterUtilities {
         writer.WriteLine();
     }
 
-    public static void WriteErrorLine(this IOutputWriter writer, string message, Exception ex) {
-        writer.WriteErrorLine(message);
+    public static void WriteError(this IOutputWriter writer, string message, Exception ex) {
+        writer.WriteError(message);
         if (IsVerbose) writer.WriteLine(ex.ToString());
+        writer.WriteLine();
     }
 
-    public static void WriteErrorLine(this IOutputWriter writer, string message) {
+    public static void WriteError(this IOutputWriter writer, string message) {
         if (!Colorize) {
             writer.WriteLine(message);
             return;

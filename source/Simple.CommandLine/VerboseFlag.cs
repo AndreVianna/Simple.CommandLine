@@ -3,7 +3,7 @@
 internal sealed class VerboseFlag : Flag
 {
     public VerboseFlag()
-        : base(new[] { "--verbose", "-v" }, "Show verbose output.", true)
+        : base("verbose", 'v', "Show verbose output.", true)
     {
     }
 

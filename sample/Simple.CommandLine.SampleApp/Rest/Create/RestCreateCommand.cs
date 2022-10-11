@@ -12,7 +12,7 @@ internal sealed class RestCreateCommand : Command
         var name = GetArgumentOrDefault<string>("NAME");
         if (name is null)
         {
-            Writer.WriteErrorLine("The name of the project is required.");
+            Writer.WriteError("The name of the project is required.");
             return;
         }
 
@@ -20,7 +20,7 @@ internal sealed class RestCreateCommand : Command
 
         var isVerbose = GetFlagOrDefault("verbose");
         if (isVerbose) {
-            Writer.WriteLine($"Setting project output to '{outputPath}'...");
+            if (outputPath is not null) Writer.WriteLine($"Setting project output to '{outputPath}'...");
             Writer.WriteLine($"Creating project '{name}'...");
         }
 

@@ -1,8 +1,8 @@
 {
   "profiles": {
-    "CliGenerator": {
+    "SampleApp": {
       "commandName": "Project",
-      "commandLineArgs": "rest create hello dad 423"
+      "commandLineArgs": "-v rest create hello"
     }
   }
 }

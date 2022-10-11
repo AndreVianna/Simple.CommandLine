@@ -1,19 +1,24 @@
-﻿namespace Simple.CommandLine;
+﻿using System.Text.RegularExpressions;
+
+namespace Simple.CommandLine;
 
 public abstract class Token
 {
+    private static readonly Regex _validName = new("^[a-z0-9]+(-?[a-z0-9]+)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private readonly string _description;
 
     protected Token(string name, string? description = null)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
-        Name = name.Trim().TrimStart('-');
+        Name = name.Trim().ToLower();
+        if (!_validName.IsMatch(Name))
+            throw new ArgumentException($"Invalid value '{name}'. Name must be in the 'kebab lower case' form. Examples: 'name', 'address2' or 'full-name'.", nameof(name));
         _description = description ?? string.Empty;
     }
 
     internal string Name { get; }
 
-    internal virtual bool Is(string? name) => name is not null && Name == name.Trim().ToLower();
+    internal virtual bool Is(string candidate) => Name == candidate.ToLower();
 
     protected IOutputWriter Writer { get; set; } = new ConsoleOutputWriter();
 

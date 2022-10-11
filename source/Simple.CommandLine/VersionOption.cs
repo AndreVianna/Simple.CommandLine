@@ -1,9 +1,9 @@
 ﻿namespace Simple.CommandLine;
 
-internal sealed class VersionOption : Option
+internal sealed class VersionOption : TerminalOption
 {
     public VersionOption()
-        : base("--version", "Show version information and exit.")
+        : base("version", "Show version information and exit.")
     {
     }
 

@@ -1,28 +1,24 @@
 ﻿namespace Simple.CommandLine;
 
-public class Option<TValue> : Parameter {
+public class TerminalOption : Parameter
+{
     private readonly Action<Command>? _onRead;
 
-    public Option(string name, char alias, string? description = null, bool isAvailableToChildren = false, Action<Command>? onRead = null)
+    public TerminalOption(string name, char alias, string? description = null, bool isAvailableToChildren = false, Action<Command>? onRead = null)
         : base(name, alias, description, isAvailableToChildren) {
         _onRead = onRead;
     }
 
-    protected Option(string name, string? description = null, bool availableToSubCommands = false, Action<Command>? onRead = null)
+    protected TerminalOption(string name, string? description = null, bool availableToSubCommands = false, Action<Command>? onRead = null)
         : this(name, '\0', description, availableToSubCommands, onRead) {
     }
 
-    public TValue Value { get; private set; } = default!;
-
     internal sealed override void Read(Command caller, ref Span<string> arguments, out bool terminate) {
+        terminate = true;
         try {
-            terminate = false;
-            Value = Convert.ChangeType(arguments[0], typeof(TValue)) is TValue value ? value : default!;
-            arguments = arguments[1..];
             OnRead(caller);
         }
         catch (Exception ex) {
-            terminate = true;
             Writer.WriteError($"An error occurred reading option '{Name}'.", ex);
         }
     }

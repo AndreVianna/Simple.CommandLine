@@ -6,8 +6,8 @@ public class RootCommand : Command
 
     public RootCommand() : base(null, _executableName)
     {
-        AddOption(new VersionOption());
-        AddOption(new HelpOption());
+        AddTerminalOption(new VersionOption());
+        AddTerminalOption(new HelpOption());
         AddFlag(new VerboseFlag());
         AddFlag(new NoColorFlag());
     }

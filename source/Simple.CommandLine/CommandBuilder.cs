@@ -43,15 +43,15 @@ public sealed class CommandBuilder
         return this;
     }
 
-    public CommandBuilder AddOption(string name, string? description = null, bool isInheritable = false) =>
-        AddOption(name, '\0', description, isInheritable);
+    public CommandBuilder AddTerminalOption(string name, string? description = null, bool isInheritable = false) =>
+        AddTerminalOption(name, '\0', description, isInheritable);
 
-    public CommandBuilder AddOption(string name, char alias, string? description = null, bool isInheritable = false) =>
-        AddOption(new(name, alias, description, isInheritable));
+    public CommandBuilder AddTerminalOption(string name, char alias, string? description = null, bool isInheritable = false) =>
+        AddTerminalOption(new(name, alias, description, isInheritable));
 
-    public CommandBuilder AddOption(Option option) {
+    public CommandBuilder AddTerminalOption(TerminalOption option) {
         _steps.Add(c => {
-            c.AddOption(option);
+            c.AddTerminalOption(option);
             return c;
         });
         return this;

@@ -35,7 +35,7 @@ public class Command : Token
         _options.Add(option);
     }
 
-    public void AddOption(Option option) {
+    public void AddTerminalOption(TerminalOption option) {
         EnsureUniqueness(option, nameof(option));
         _options.Add(option);
     }
@@ -51,18 +51,23 @@ public class Command : Token
     {
         try
         {
+            var argumentCount = 0;
             var parameterIndex = 0;
             while (arguments.Length > 0)
             {
-                var argument = arguments[0];
-                arguments = arguments[1..];
-                if (TryReadOption(argument, ref arguments, out var terminate)) continue;
-                if (terminate) return;
-                if (TryExecuteChild(argument, arguments)) return;
-                if (TryReadArgument(parameterIndex++, argument, out terminate)) continue;
-                if (terminate) return;
+                argumentCount++;
+                var argument = arguments[0].Trim();
+                if (!string.IsNullOrWhiteSpace(argument)) {
+                    arguments = arguments[1..];
+                    if (TryReadOption(argument, ref arguments, out var terminate)) continue;
+                    if (terminate) return;
+                    if (TryExecuteChildCommand(argument, arguments)) return;
+                    if (TryReadArgument(parameterIndex++, argument, out terminate)) continue;
+                    if (terminate) return;
+                }
 
-                Writer.WriteErrorLine($"Unknown option or command: '{argument}'.");
+                Writer.WriteError($"Unknown option or command: '{argument}'.");
+                Writer.WriteHelp(this);
                 return;
             }
 
@@ -70,7 +75,7 @@ public class Command : Token
         }
         catch (Exception ex)
         {
-            Writer.WriteErrorLine("An error occurred while executing command.", ex);
+            Writer.WriteError("An error occurred while executing command.", ex);
         }
     }
 
@@ -79,19 +84,28 @@ public class Command : Token
         else _onExecuting.Invoke(this);
     }
 
+    protected IReadOnlyCollection<T> GetListOptionOrDefault<T>(string name) {
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        var option = _options.OfType<ListOption<T>>().FirstOrDefault(i => i.Is(name.Trim()));
+        return option is null ? new List<T>() : option.Values;
+    }
+
     protected T? GetOptionOrDefault<T>(string name) {
-        var option = _options.OfType<Option<T>>().FirstOrDefault(i => i.Is(name));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        var option = _options.OfType<Option<T>>().FirstOrDefault(i => i.Is(name.Trim()));
         return option is null ? default : option.Value;
     }
 
     protected T? GetArgumentOrDefault<T>(string name)
     {
-        var argument = _arguments.OfType<Argument<T>>().FirstOrDefault(i => i.Is(name));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        var argument = _arguments.OfType<Argument<T>>().FirstOrDefault(i => i.Is(name.Trim()));
         return argument is null ? default : argument.Value;
     }
 
     protected bool GetFlagOrDefault(string name) {
-        var flag = _options.OfType<Flag>().FirstOrDefault(i => i.Is(name));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        var flag = _options.OfType<Flag>().FirstOrDefault(i => i.Is(name.Trim()));
         return flag?.IsEnable ?? false;
     }
 
@@ -103,26 +117,32 @@ public class Command : Token
 
     private void EnsureUniqueness(Token token, string name) {
         if (_options.Any(i => i.Is(token.Name)))
-            throw new ArgumentException($"An argument, flag or option with the name '{token.Name}' already exists.", name);
-        if (token is Parameter parameter && _options.Any(i => i.Is(parameter.Alias)))
+            throw new ArgumentException($"An argument, flag or option with the candidate '{token.Name}' already exists.", name);
+        if (token is Parameter parameter && parameter.Alias is not null && _options.Any(i => i.IsAlias(parameter.Alias)))
             throw new ArgumentException($"A flag or option with the alias '{parameter.Alias}' already exists.", name);
     }
 
-    private bool TryReadOption(string name, ref Span<string> arguments, out bool terminate)
+    private bool TryReadOption(string candidate, ref Span<string> arguments, out bool terminate)
     {
         terminate = false;
-        var option = _options.FirstOrDefault(o => o.Is(name));
+        if (candidate[0] != '-') return false;
+        var isName = candidate.Length > 1 && candidate[1] == '-';
+        candidate = candidate.TrimStart('-');
+        var option = _options.FirstOrDefault(o => isName ? o.Is(candidate) : o.IsAlias(candidate));
         if (option is null) return false;
         option.Read(this, ref arguments, out terminate);
-        return true;
+        return !terminate;
     }
 
     private bool TryReadArgument(int index, string argument, out bool terminate)
     {
         if (index >= _arguments.Count)
         {
-            Writer.WriteErrorLine($"Invalid number of arguments for command '{Name}'.");
+            terminate = false;
+            if (_arguments.Count == 0) return false;
+
             terminate = true;
+            Writer.WriteError($"Invalid number of arguments for command '{Name}'.");
             return false;
         }
 
@@ -130,9 +150,9 @@ public class Command : Token
         return !terminate;
     }
 
-    private bool TryExecuteChild(string name, Span<string> arguments)
+    private bool TryExecuteChildCommand(string candidate, Span<string> arguments)
     {
-        var command = _commands.FirstOrDefault(o => o.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+        var command = _commands.FirstOrDefault(o => o.Name.Equals(candidate, StringComparison.InvariantCultureIgnoreCase));
         if (command is null) return false;
         command.Execute(arguments);
         return true;

@@ -3,7 +3,7 @@
 internal sealed class NoColorFlag : Flag
 {
     public NoColorFlag()
-        : base("--no-color", "Don't colorize output.", true)
+        : base("no-color", "Don't colorize output.", true)
     {
     }
 

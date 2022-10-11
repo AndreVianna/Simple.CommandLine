@@ -34,7 +34,7 @@ public class Argument<TValue> : Argument
         catch (Exception ex)
         {
             terminate = true;
-            Writer.WriteErrorLine($"An error occurred processing argument '{Name}'.", ex);
+            Writer.WriteError($"An error occurred processing argument '{Name}'.", ex);
         }
     }
 }

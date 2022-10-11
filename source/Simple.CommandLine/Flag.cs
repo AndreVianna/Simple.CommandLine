@@ -24,7 +24,7 @@ public class Flag : Parameter
         }
         catch (Exception ex) {
             terminate = true;
-            Writer.WriteErrorLine($"An error occurred reading option '{Name}'.", ex);
+            Writer.WriteError($"An error occurred reading option '{Name}'.", ex);
         }
     }
 

@@ -2,8 +2,8 @@
 
 internal static class MainCommand {
     public static void Execute(string[] arguments) {
-        var command = new RootCommand();
-        command.AddSubCommand(new RestCommand(command));
+        var command = new DefaultRootCommand();
+        command.AddSubCommand(new RestCommand());
         command.Execute(arguments);
     }
 }

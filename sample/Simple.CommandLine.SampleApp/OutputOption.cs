@@ -1,4 +1,6 @@
-﻿namespace Simple.CommandLine.SampleApp;
+﻿using Simple.CommandLine.Parts;
+
+namespace Simple.CommandLine.SampleApp;
 
 internal sealed class OutputOption : Option<string>
 {

@@ -2,7 +2,7 @@
 
 internal sealed class RestCommand : Command
 {
-    public RestCommand(Command parent) : base(parent, "rest", "Manages restful api projects.") {
-        AddSubCommand(new RestCreateCommand(this));
+    public RestCommand() : base("rest", "Manages restful api projects.") {
+        AddSubCommand(new RestCreateCommand());
     }
 }

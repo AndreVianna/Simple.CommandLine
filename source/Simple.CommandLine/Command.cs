@@ -1,82 +1,58 @@
-﻿namespace Simple.CommandLine;
+﻿using Simple.CommandLine.Parts;
 
-public class Command : Token
-{
-    private readonly Command? _parent;
+using Parameter = Simple.CommandLine.Parts.Parameter;
+
+namespace Simple.CommandLine;
+
+public class Command : Token {
+    private Command? _parent;
     private readonly Action<Command>? _onExecuting;
-    private readonly IList<Argument> _arguments = new List<Argument>();
-    private readonly ICollection<Parameter> _options = new List<Parameter>();
+    private readonly IList<Parameter> _parameters = new List<Parameter>();
+    private readonly ICollection<Option> _options = new List<Option>();
     private readonly ICollection<Command> _commands = new List<Command>();
 
-    public Command(Command? parent, string name, string? description = null, Action<Command>? onExecuting = null) : base(name, description)
-    {
-        _parent = parent;
+    public Command(string name, string? description = null, Action<Command>? onExecuting = null, IOutputWriter? writer = null) : base(name, description, writer) {
         _onExecuting = onExecuting;
-        if (_parent is null) return;
-        foreach (var inheritedOption in _parent._options.Where(i => i.IsAvailableToChildren).ToArray()) {
-            _options.Add(inheritedOption);
-        }
     }
 
-    internal string Path => (_parent is null ? "" : _parent.Path + " ") + Name;
-
-    public void AddArgument<T>(Argument<T> argument) {
-        EnsureUniqueness(argument, nameof(argument));
-        _arguments.Add(argument);
+    public void AddParameter<T>(Parameter<T> parameter) {
+        EnsureUniqueness(parameter, nameof(parameter));
+        parameter.Writer = Writer;
+        _parameters.Add(parameter);
     }
 
-    public void AddListOption<T>(ListOption<T> option) {
+    public void AddMultiOption<T>(MultiOption<T> option) {
         EnsureUniqueness(option, nameof(option));
+        option.Writer = Writer;
         _options.Add(option);
     }
 
     public void AddOption<T>(Option<T> option) {
         EnsureUniqueness(option, nameof(option));
+        option.Writer = Writer;
         _options.Add(option);
     }
 
     public void AddTerminalOption(TerminalOption option) {
         EnsureUniqueness(option, nameof(option));
+        option.Writer = Writer;
         _options.Add(option);
     }
 
     public void AddFlag(Flag flag) {
         EnsureUniqueness(flag, nameof(flag));
+        flag.Writer = Writer;
         _options.Add(flag);
     }
 
-    public void AddSubCommand(Command command) => _commands.Add(command);
-
-    protected void Execute(Span<string> arguments)
-    {
-        try
-        {
-            var argumentCount = 0;
-            var parameterIndex = 0;
-            while (arguments.Length > 0)
-            {
-                argumentCount++;
-                var argument = arguments[0].Trim();
-                if (!string.IsNullOrWhiteSpace(argument)) {
-                    arguments = arguments[1..];
-                    if (TryReadOption(argument, ref arguments, out var terminate)) continue;
-                    if (terminate) return;
-                    if (TryExecuteChildCommand(argument, arguments)) return;
-                    if (TryReadArgument(parameterIndex++, argument, out terminate)) continue;
-                    if (terminate) return;
-                }
-
-                Writer.WriteError($"Unknown option or command: '{argument}'.");
-                Writer.WriteHelp(this);
-                return;
-            }
-
-            Execute();
+    public void AddSubCommand(Command command) {
+        command._parent = this;
+        command.Writer = Writer;
+        foreach (var inheritedOption in _options.Where(i => i.IsInheritable).ToArray()) {
+            command._options.Add(inheritedOption);
         }
-        catch (Exception ex)
-        {
-            Writer.WriteError("An error occurred while executing command.", ex);
-        }
+
+        _commands.Add(command);
     }
 
     protected virtual void Execute() {
@@ -84,77 +60,166 @@ public class Command : Token
         else _onExecuting.Invoke(this);
     }
 
-    protected IReadOnlyCollection<T> GetListOptionOrDefault<T>(string name) {
-        ArgumentNullException.ThrowIfNull(name, nameof(name));
-        var option = _options.OfType<ListOption<T>>().FirstOrDefault(i => i.Is(name.Trim()));
-        return option is null ? new List<T>() : option.Values;
+    public IReadOnlyList<T> GetCollectionOrDefault<T>(string name) {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name cannot be null or whitespace.", nameof(name));
+        var option = _options.FirstOrDefault(i => i.Is(name.Trim()));
+        return option switch {
+            null => Array.Empty<T>(),
+            MultiOption<T> typedOption => typedOption.Values,
+            _ => throw new InvalidCastException($"Cannot cast value '{name}' to a collection of '{typeof(T).Name}'.")
+        };
     }
 
-    protected T? GetOptionOrDefault<T>(string name) {
-        ArgumentNullException.ThrowIfNull(name, nameof(name));
-        var option = _options.OfType<Option<T>>().FirstOrDefault(i => i.Is(name.Trim()));
-        return option is null ? default : option.Value;
+    public IReadOnlyList<T> GetRequiredCollection<T>(string name) {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name cannot be null or whitespace.", nameof(name));
+        var option = _options.FirstOrDefault(i => i.Is(name.Trim()));
+        return option switch {
+            null => throw new InvalidOperationException($"Required option '{name}' not defined."),
+            MultiOption<T> typedOption => typedOption.Values,
+            _ => throw new InvalidCastException($"Cannot cast value '{name}' to a collection of '{typeof(T).Name}'.")
+        };
     }
 
-    protected T? GetArgumentOrDefault<T>(string name)
-    {
-        ArgumentNullException.ThrowIfNull(name, nameof(name));
-        var argument = _arguments.OfType<Argument<T>>().FirstOrDefault(i => i.Is(name.Trim()));
-        return argument is null ? default : argument.Value;
-    }
-
-    protected bool GetFlagOrDefault(string name) {
-        ArgumentNullException.ThrowIfNull(name, nameof(name));
-        var flag = _options.OfType<Flag>().FirstOrDefault(i => i.Is(name.Trim()));
-        return flag?.IsEnable ?? false;
-    }
-
-    internal string[] GetTokenDescriptions(string type) => type switch {
-        nameof(Argument) => _arguments.Select(c => c.Describe(2, 20)).ToArray(),
-        nameof(Parameter) => _options.Select(c => c.Describe(2, 20)).ToArray(),
-        _ => _commands.Select(c => c.Describe(2, 20)).ToArray()
-    };
-
-    private void EnsureUniqueness(Token token, string name) {
-        if (_options.Any(i => i.Is(token.Name)))
-            throw new ArgumentException($"An argument, flag or option with the candidate '{token.Name}' already exists.", name);
-        if (token is Parameter parameter && parameter.Alias is not null && _options.Any(i => i.IsAlias(parameter.Alias)))
-            throw new ArgumentException($"A flag or option with the alias '{parameter.Alias}' already exists.", name);
-    }
-
-    private bool TryReadOption(string candidate, ref Span<string> arguments, out bool terminate)
-    {
-        terminate = false;
-        if (candidate[0] != '-') return false;
-        var isName = candidate.Length > 1 && candidate[1] == '-';
-        candidate = candidate.TrimStart('-');
-        var option = _options.FirstOrDefault(o => isName ? o.Is(candidate) : o.IsAlias(candidate));
-        if (option is null) return false;
-        option.Read(this, ref arguments, out terminate);
-        return !terminate;
-    }
-
-    private bool TryReadArgument(int index, string argument, out bool terminate)
-    {
-        if (index >= _arguments.Count)
-        {
-            terminate = false;
-            if (_arguments.Count == 0) return false;
-
-            terminate = true;
-            Writer.WriteError($"Invalid number of arguments for command '{Name}'.");
-            return false;
+    public T? GetValueOrDefault<T>(string name, T? defaultValue = default) {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name cannot be null or whitespace.", nameof(name));
+        var option = _options.FirstOrDefault(i => i.Is(name.Trim()));
+        if (option is not null) {
+            return option switch {
+                Option<T> { IsSet: false } => defaultValue,
+                Option<T> typedArgument => typedArgument.Value,
+                _ => throw new InvalidCastException($"Cannot cast value '{name}' to '{typeof(T).Name}'.")
+            };
         }
 
-        _arguments[index].Read(this, argument, out terminate);
+        var parameter = _parameters.FirstOrDefault(i => i.Is(name.Trim()));
+        return parameter switch {
+            null => defaultValue,
+            Parameter<T> { IsSet: false } => defaultValue,
+            Parameter<T> typedArgument => typedArgument.Value,
+            _ => throw new InvalidCastException($"Cannot cast value '{name}' to '{typeof(T).Name}'.")
+        };
+    }
+
+    public T? GetValueOrDefault<T>(uint index, T? defaultValue = default) {
+        if (index >= _parameters.Count) return defaultValue;
+        var parameter = _parameters[(int)index];
+        return parameter switch {
+            Parameter<T> { IsSet: false } => defaultValue,
+            Parameter<T> typedArgument => typedArgument.Value,
+            _ => throw new InvalidCastException($"Cannot cast parameter at index {index} to '{typeof(T).Name}'.")
+        };
+    }
+
+    public T GetRequiredValue<T>(string name) {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name cannot be null or whitespace.", nameof(name));
+        var option = _options.FirstOrDefault(i => i.Is(name.Trim()));
+        if (option is not null) {
+            return option switch {
+                Option<T> { IsSet: false } => throw new InvalidOperationException($"Missing required value '{name}'."),
+                Option<T> typedArgument => typedArgument.Value,
+                _ => throw new InvalidCastException($"Cannot cast value '{name}' to '{typeof(T).Name}'.")
+            };
+        }
+
+        var parameter = _parameters.FirstOrDefault(i => i.Is(name.Trim()));
+        return parameter switch {
+            null => throw new InvalidOperationException($"Required value '{name}' not defined."),
+            Parameter<T> { IsSet: false } => throw new InvalidOperationException($"Missing required value '{name}'."),
+            Parameter<T> typedArgument => typedArgument.Value,
+            _ => throw new InvalidCastException($"Cannot cast value '{name}' to '{typeof(T).Name}'.")
+        };
+    }
+
+    public T GetRequiredValue<T>(uint index) {
+        if (index >= _parameters.Count) throw new ArgumentOutOfRangeException(nameof(index), $"Parameter at index {index} not found. Parameter count is {_parameters.Count}.");
+        var parameter = _parameters[(int)index];
+        return parameter switch {
+            Parameter<T> { IsSet: false } => throw new InvalidOperationException($"Missing required parameter at index {index}."),
+            Parameter<T> typedArgument => typedArgument.Value,
+            _ => throw new InvalidCastException($"Cannot cast parameter at index {index} to '{typeof(T).Name}'.")
+        };
+    }
+
+    public bool GetFlagOrDefault(string name, bool defaultValue = false) {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name cannot be null or whitespace.", nameof(name));
+        var flag = _options.OfType<Flag>().FirstOrDefault(i => i.Is(name.Trim()));
+        return flag is null || !flag.IsSet ? defaultValue : flag.IsEnable;
+    }
+
+    public bool GetRequiredFlag(string name) {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name cannot be null or whitespace.", nameof(name));
+        var flag = _options.OfType<Flag>().FirstOrDefault(i => i.Is(name.Trim()));
+        return flag switch {
+            null => throw new InvalidOperationException($"Required flag '{name}' not defined."),
+            { IsSet: false } => throw new InvalidOperationException($"Missing required flag '{name}'."),
+            _ => flag.IsEnable,
+        };
+    }
+
+    internal void ExecuteInternally(Span<string> arguments) {
+        try {
+            while (arguments.Length > 0) {
+                if (TryReadOption(ref arguments, out var terminate)) continue;
+                if (terminate) return;
+                if (TryExecuteChildCommand(arguments)) return;
+                ReadCommandParameters(ref arguments);
+                break;
+            }
+
+            Execute();
+        }
+        catch (Exception ex) {
+            Writer.WriteError($"An error occurred while executing command '{Name}'.", ex);
+        }
+    }
+
+    internal string Path => (_parent is null ? "" : _parent.Path + " ") + Name;
+
+    internal string[] GetPartDescriptions(string type) => type switch {
+        nameof(Parameter) => _parameters.Select(c => c.Describe()).ToArray(),
+        nameof(Option) => _options.Select(c => c.Describe()).ToArray(),
+        _ => _commands.Select(c => c.Describe()).ToArray()
+    };
+
+    private void EnsureUniqueness(Argument commandPart, string name) {
+        if (_commands.Any(i => i.Is(commandPart.Name)))
+            throw new ArgumentException($"A sub-command with name '{commandPart.Name}' already exists.", name);
+        if (_parameters.Any(i => i.Is(commandPart.Name)))
+            throw new ArgumentException($"A parameter with name '{commandPart.Name}' already exists.", name);
+        if (_options.Any(i => i.Is(commandPart.Name)))
+            throw new ArgumentException($"A flag or option with name '{commandPart.Name}' already exists.", name);
+        if (_options.Any(i => i.Is(commandPart.Alias)))
+            throw new ArgumentException($"A flag or option with alias '{commandPart.Alias}' already exists.", name);
+    }
+
+    private bool TryReadOption(ref Span<string> arguments, out bool terminate) {
+        terminate = false;
+
+        var candidate = arguments[0];
+        if (candidate[0] != '-') return false;
+
+        candidate = candidate.TrimStart('-');
+        var option = _options.FirstOrDefault(o => o.Is(candidate));
+        if (option is null) return false;
+
+        arguments = arguments[1..];
+        option.Read(this, ref arguments);
+
+        terminate = option is TerminalOption;
         return !terminate;
     }
 
-    private bool TryExecuteChildCommand(string candidate, Span<string> arguments)
-    {
-        var command = _commands.FirstOrDefault(o => o.Name.Equals(candidate, StringComparison.InvariantCultureIgnoreCase));
+    private void ReadCommandParameters(ref Span<string> arguments) {
+        foreach (var parameter in _parameters) {
+            parameter.Read(this, ref arguments);
+            arguments = arguments[1..];
+        }
+    }
+    private bool TryExecuteChildCommand(Span<string> arguments) {
+        var name = arguments[0].Trim();
+        var command = _commands.FirstOrDefault(o => o.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
         if (command is null) return false;
-        command.Execute(arguments);
+        command.ExecuteInternally(arguments);
         return true;
     }
 }

@@ -1,15 +1,22 @@
 ﻿namespace Simple.CommandLine.Utilities;
 
-public abstract class DummyOutputWriter : IOutputWriter
-{
-    public ConsoleColor ForegroundColor
-    {
+public abstract class DummyOutputWriter : IOutputWriter {
+    public ConsoleColor ForegroundColor {
         get => throw new NotImplementedException();
         set => throw new NotImplementedException();
     }
 
-    public ConsoleColor BackgroundColor
-    {
+    public ConsoleColor BackgroundColor {
+        get => throw new NotImplementedException();
+        set => throw new NotImplementedException();
+    }
+
+    public bool UseColors {
+        get => throw new NotImplementedException();
+        set => throw new NotImplementedException();
+    }
+
+    public bool IsVerbose {
         get => throw new NotImplementedException();
         set => throw new NotImplementedException();
     }

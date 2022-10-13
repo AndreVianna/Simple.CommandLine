@@ -1,16 +1,22 @@
-﻿namespace Simple.CommandLine;
+﻿namespace Simple.CommandLine.Utilities;
 
-public class DummyOutputTests {
+public class DummyOutputTests
+{
     private sealed class TestOutputWriter : DummyOutputWriter { }
 
     [Fact]
-    public void DummyOutput_AllProperties_Throw() {
+    public void DummyOutput_AllProperties_Throw()
+    {
         var subject = new TestOutputWriter();
 
         ((Action)(() => _ = subject.ForegroundColor)).Should().Throw<NotImplementedException>();
         ((Action)(() => subject.ForegroundColor = ConsoleColor.Black)).Should().Throw<NotImplementedException>();
         ((Action)(() => _ = subject.BackgroundColor)).Should().Throw<NotImplementedException>();
         ((Action)(() => subject.BackgroundColor = ConsoleColor.White)).Should().Throw<NotImplementedException>();
+        ((Action)(() => _ = subject.IsVerbose)).Should().Throw<NotImplementedException>();
+        ((Action)(() => subject.IsVerbose = false)).Should().Throw<NotImplementedException>();
+        ((Action)(() => _ = subject.UseColors)).Should().Throw<NotImplementedException>();
+        ((Action)(() => subject.UseColors = false)).Should().Throw<NotImplementedException>();
         ((Action)(() => subject.ResetColor())).Should().Throw<NotImplementedException>();
         ((Action)(() => subject.Write(default(ulong)))).Should().Throw<NotImplementedException>();
         ((Action)(() => subject.Write(default(uint)))).Should().Throw<NotImplementedException>();

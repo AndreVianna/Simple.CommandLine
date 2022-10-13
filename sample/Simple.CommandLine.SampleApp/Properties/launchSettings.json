@@ -2,7 +2,7 @@
   "profiles": {
     "SampleApp": {
       "commandName": "Project",
-      "commandLineArgs": "-v rest create hello"
+      "commandLineArgs": "--help"
     }
   }
 }

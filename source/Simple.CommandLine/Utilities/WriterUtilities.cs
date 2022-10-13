@@ -1,23 +1,36 @@
 ﻿namespace Simple.CommandLine.Utilities;
 
 public static class WriterUtilities {
-    internal static bool Colorize { get; set; } = true;
-    internal static bool IsVerbose { get; set; }
+    public static void WriteVersion(this IOutputWriter writer, Command command) {
+        var assembly = command.GetType().Assembly;
+        var name = assembly.GetName().Name;
+        var title = assembly.GetCustomAttribute<AssemblyTitleAttribute>()?.Title;
+        var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+        writer.WriteLine(title ?? name);
+        writer.WriteLine(version);
+    }
+
 
     public static void WriteHelp(this IOutputWriter writer, Command command) {
         if (command is RootCommand) {
-            var assembly = Assembly.GetEntryAssembly()!;
+            var assembly = command.GetType().Assembly;
             var name = assembly.GetName().Name;
-            var description = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description;
+            var title = assembly.GetCustomAttribute<AssemblyTitleAttribute>()?.Title;
             var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
             writer.WriteLine();
-            writer.WriteLine($"{description ?? name} {version}");
+            writer.WriteLine($"{title ?? name} {version}");
+
+            var description = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description;
+            if (description is not null) {
+                writer.WriteLine();
+                writer.WriteLine(description);
+            }
         }
 
         writer.WriteLine();
-        var arguments = command.GetTokenDescriptions(nameof(Argument));
-        var options = command.GetTokenDescriptions(nameof(Parameter));
-        var commands = command.GetTokenDescriptions(nameof(Command));
+        var arguments = command.GetPartDescriptions(nameof(Parameter));
+        var options = command.GetPartDescriptions(nameof(Option));
+        var commands = command.GetPartDescriptions(nameof(Command));
         writer.WriteLine($"Usage: {command.Path}{(arguments.Length == 0 ? "" : " [arguments]")}{(options.Length == 0 ? "" : " [options]")}{(commands.Length == 0 ? "" : " [command]")}");
         writer.WriteSection("Arguments:", arguments);
         writer.WriteSection("Options:", options);
@@ -32,12 +45,11 @@ public static class WriterUtilities {
 
     public static void WriteError(this IOutputWriter writer, string message, Exception ex) {
         writer.WriteError(message);
-        if (IsVerbose) writer.WriteLine(ex.ToString());
-        writer.WriteLine();
+        if (writer.IsVerbose) writer.WriteLine(ex.ToString().Replace("\r", ""));
     }
 
     public static void WriteError(this IOutputWriter writer, string message) {
-        if (!Colorize) {
+        if (!writer.UseColors) {
             writer.WriteLine(message);
             return;
         }

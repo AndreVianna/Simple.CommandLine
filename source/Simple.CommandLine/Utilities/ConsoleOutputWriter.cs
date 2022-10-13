@@ -1,16 +1,16 @@
 ﻿namespace Simple.CommandLine.Utilities;
 
 [ExcludeFromCodeCoverage(Justification = "Testing the system.")]
-public sealed class ConsoleOutputWriter : IOutputWriter
-{
-    public ConsoleColor ForegroundColor
-    {
+public sealed class ConsoleOutputWriter : IOutputWriter {
+    public bool UseColors { get; set; } = true;
+    public bool IsVerbose { get; set; }
+
+    public ConsoleColor ForegroundColor {
         get => Console.ForegroundColor;
         set => Console.ForegroundColor = value;
     }
 
-    public ConsoleColor BackgroundColor
-    {
+    public ConsoleColor BackgroundColor {
         get => Console.BackgroundColor;
         set => Console.BackgroundColor = value;
     }

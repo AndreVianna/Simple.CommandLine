@@ -10,10 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\source\Simple.CommandLine\Simple.CommandLine.csproj" />
   </ItemGroup>
 

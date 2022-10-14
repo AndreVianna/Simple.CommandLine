@@ -2,16 +2,16 @@
 
 public abstract class Parameter : Argument, IHasValue
 {
-    protected Parameter(string name, string? description = null, Action<Command>? onRead = null, IOutputWriter? writer = null)
-        : base(name, description, false, onRead, writer)
+    protected Parameter(string name, string? description = null, Action<Command>? onRead = null)
+        : base(name, description, false, onRead)
     {
     }
 }
 
 public class Parameter<TValue> : Parameter
 {
-    public Parameter(string name, string? description = null, Action<Command>? onRead = null, IOutputWriter? writer = null)
-    : base(name, description, onRead, writer)
+    public Parameter(string name, string? description = null, Action<Command>? onRead = null)
+    : base(name, description, onRead)
     {
     }
 

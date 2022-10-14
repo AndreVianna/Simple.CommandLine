@@ -2,8 +2,8 @@
 
 internal sealed class DefaultNoColorFlag : Flag
 {
-    public DefaultNoColorFlag(IOutputWriter? writer = null)
-        : base("no-color", "Don't colorize output.", true, writer: writer)
+    public DefaultNoColorFlag()
+        : base("no-color", "Don't colorize output.", true)
     {
     }
 

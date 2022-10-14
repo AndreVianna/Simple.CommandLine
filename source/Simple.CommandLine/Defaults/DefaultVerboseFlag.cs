@@ -2,8 +2,8 @@
 
 internal sealed class DefaultVerboseFlag : Flag
 {
-    public DefaultVerboseFlag(IOutputWriter? writer = null)
-        : base("verbose", 'v', "Show verbose output.", true, writer: writer)
+    public DefaultVerboseFlag()
+        : base("verbose", 'v', "Show verbose output.", true)
     {
     }
 

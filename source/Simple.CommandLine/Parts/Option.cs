@@ -2,15 +2,15 @@
 
 public abstract class Option : Argument
 {
-    protected Option(string name, char alias, string? description = null, bool isInheritable = false, Action<Command>? onRead = null, IOutputWriter? writer = null)
-        : base(name, alias, description, isInheritable, onRead, writer)
+    protected Option(string name, char alias, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
+        : base(name, alias, description, isInheritable, onRead)
     {
     }
 }
 
 public class Option<TValue> : Option, IHasValue {
-    public Option(string name, char alias, string? description = null, bool isInheritable = false, Action<Command>? onRead = null, IOutputWriter? writer = null)
-        : base(name, alias, description, isInheritable, onRead, writer) {
+    public Option(string name, char alias, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
+        : base(name, alias, description, isInheritable, onRead) {
     }
 
     public Option(string name, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)

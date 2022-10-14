@@ -7,7 +7,9 @@ public class RootCommandTests {
         var subject = new RootCommand(c => {
             var who = c.GetValueOrDefault<string>("who");
             c.Writer.WriteLine($"Hello {who}!");
-        }, writer);
+        }) {
+            Writer = writer
+        };
         subject.AddParameter(new Parameter<string>("who"));
 
         subject.Execute("world");

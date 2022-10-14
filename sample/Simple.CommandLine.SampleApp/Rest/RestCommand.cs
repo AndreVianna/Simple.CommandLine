@@ -3,6 +3,6 @@
 internal sealed class RestCommand : Command
 {
     public RestCommand() : base("rest", "Manages restful api projects.") {
-        AddSubCommand(new RestCreateCommand());
+        AddCommand(new RestCreateCommand());
     }
 }

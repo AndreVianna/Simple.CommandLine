@@ -2,8 +2,8 @@
 
 internal sealed class DefaultVersionOption : TerminalOption
 {
-    public DefaultVersionOption(IOutputWriter? writer = null)
-        : base("version", "Show version information and exit.", writer: writer)
+    public DefaultVersionOption()
+        : base("version", "Show version information and exit.")
     {
     }
 

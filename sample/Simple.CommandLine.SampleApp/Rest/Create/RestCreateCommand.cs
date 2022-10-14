@@ -7,7 +7,7 @@ internal sealed class RestCreateCommand : Command
         AddOption(new OutputOption());
     }
 
-    protected override void Execute()
+    protected override void OnExecute()
     {
         var name = GetValueOrDefault<string>("NAME");
         if (name is null)

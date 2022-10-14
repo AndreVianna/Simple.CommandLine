@@ -2,7 +2,7 @@
 
 public class DefaultRootCommand : RootCommand
 {
-    public DefaultRootCommand(IOutputWriter? writer = null) : base(writer: writer)
+    public DefaultRootCommand(Action<Command>? onExecute = null, Action<Command>? onBeforeExecuteChild = null) : base(onExecute, onBeforeExecuteChild)
     {
         AddTerminalOption(new DefaultVersionOption());
         AddTerminalOption(new DefaultHelpOption());

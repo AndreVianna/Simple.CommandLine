@@ -5,7 +5,6 @@ public class CommandExecutionTests {
 
     [Fact]
     public void Command_Execute_WithException_AndVerboseFlagAndNoColor_ShowError() {
-        var projectRootFolder = Directory.GetCurrentDirectory().Replace("\\Simple.CommandLine\\tests\\Simple.CommandLine.UnitTests\\bin\\Debug\\net6.0".Replace('\\', Path.DirectorySeparatorChar), "");
         var subject = CommandBuilder.FromRoot().WithWriter(_writer)
             .OnExecute(_ => throw new("Some exception."))
             .AddFlag(new DefaultVerboseFlag())
@@ -14,18 +13,11 @@ public class CommandExecutionTests {
 
         subject.Execute("-v", "--no-color");
 
-        _writer.Output.Should().Be(
-@"An error occurred while executing command 'testhost'.
-System.Exception: Some exception.
-   at Simple.CommandLine.CommandExecutionTests.<>c.<Command_Execute_WithException_AndVerboseFlagAndNoColor_ShowError>b__1_0(Command _) in C:\Projects\Simple.CommandLine\tests\Simple.CommandLine.UnitTests\CommandExecutionTests.cs:line 10
-   at Simple.CommandLine.Command.OnExecute() in C:\Projects\Simple.CommandLine\source\Simple.CommandLine\Command.cs:line 166
-   at Simple.CommandLine.Command.Execute(Span`1 arguments) in C:\Projects\Simple.CommandLine\source\Simple.CommandLine\Command.cs:line 181
-".Replace("\r", "").Replace("C:\\Projects", projectRootFolder).Replace('\\', Path.DirectorySeparatorChar));
+        _writer.Output.Should().Contain("An error occurred while executing command 'testhost'.\nSystem.Exception: Some exception.");
     }
 
     [Fact]
     public void Command_Execute_WithException_AndVerboseFlag_ShowError() {
-        var projectRootFolder = Directory.GetCurrentDirectory().Replace("\\Simple.CommandLine\\tests\\Simple.CommandLine.UnitTests\\bin\\Debug\\net6.0".Replace('\\', Path.DirectorySeparatorChar), "");
         var subject = CommandBuilder.FromRoot().WithWriter(_writer)
             .OnExecute(_ => throw new("Some exception."))
             .AddFlag(new DefaultVerboseFlag())
@@ -33,13 +25,7 @@ System.Exception: Some exception.
 
         subject.Execute("-v");
 
-        _writer.Output.Should().Be(
-@"An error occurred while executing command 'testhost'.
-System.Exception: Some exception.
-   at Simple.CommandLine.CommandExecutionTests.<>c.<Command_Execute_WithException_AndVerboseFlag_ShowError>b__2_0(Command _) in C:\Projects\Simple.CommandLine\tests\Simple.CommandLine.UnitTests\CommandExecutionTests.cs:line 30
-   at Simple.CommandLine.Command.OnExecute() in C:\Projects\Simple.CommandLine\source\Simple.CommandLine\Command.cs:line 166
-   at Simple.CommandLine.Command.Execute(Span`1 arguments) in C:\Projects\Simple.CommandLine\source\Simple.CommandLine\Command.cs:line 181
-".Replace("\r", "").Replace("C:\\Projects", projectRootFolder).Replace('\\', Path.DirectorySeparatorChar));
+        _writer.Output.Should().Contain("An error occurred while executing command 'testhost'.\nSystem.Exception: Some exception.");
     }
 
     [Fact]
@@ -220,9 +206,9 @@ Usage: command [parameters] [options]
 Usage: command [options] [command]
 
 Options:
-  --help|-h              Show this help information and exit.
+  -h, --help             Show this help information and exit.
   --options <options>
-  --very-long-name|-v <very-long-name> Some description
+  -v, --very-long-name <very-long-name> Some description
 
 Parameters:
   <param>

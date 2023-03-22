@@ -76,8 +76,8 @@ public static class WriterUtilities {
                 builder.Append('<').Append(token.Name).Append('>');
                 break;
             case Option option:
+                if (option.Alias != '\0') builder.Append('-').Append(option.Alias).Append(", ");
                 builder.Append("--").Append(token.Name);
-                if (option.Alias != '\0') builder.Append("|-").Append(option.Alias);
                 if (option is IHasValue) builder.Append(" <").Append(token.Name).Append('>');
                 break;
             default:

@@ -7,7 +7,7 @@ public class InMemoryOutputWriter : IOutputWriter
     public ConsoleColor ForegroundColor { get; set; }
     public ConsoleColor BackgroundColor { get; set; }
     public bool UseColors { get; set; } = true;
-    public bool IsVerbose { get; set; }
+    public VerboseLevel VerboseLevel { get; set; }
 
     public void ResetColor() { }
 

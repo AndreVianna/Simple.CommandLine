@@ -1,10 +1,10 @@
 ﻿namespace Simple.CommandLine.SampleApp.Rest.Create;
 
-internal sealed class RestCreateCommand : Command
+internal sealed class RestCreateCommand : SubCommand
 {
     public RestCreateCommand() : base("create", "Create the initial api project.") {
-        AddParameter(new NameParameter());
-        AddOption(new OutputOption());
+        Add(new NameParameter());
+        Add(new OutputOption());
     }
 
     protected override void OnExecute()
@@ -18,7 +18,7 @@ internal sealed class RestCreateCommand : Command
 
         var outputPath = GetValueOrDefault<string>("output");
 
-        var isVerbose = GetFlagOrDefault("verbose");
+        var isVerbose = IsFlagSet("verbose");
         if (isVerbose) {
             if (outputPath is not null) Writer.WriteLine($"Setting project output to '{outputPath}'...");
             Writer.WriteLine($"Creating project '{name}'...");

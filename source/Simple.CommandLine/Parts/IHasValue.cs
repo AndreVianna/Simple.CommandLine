@@ -1,5 +1,18 @@
 ﻿namespace Simple.CommandLine.Parts;
 
-public interface IHasValue {}
+public interface IHasValue
+{
+    Type ValueType { get; }
+}
 
-public interface IHasValue<TValue> : IHasValue { }
+public interface IHasValue<out TValue> : IHasValue
+{
+    TValue Value { get; }
+}
+
+public interface IHasValues : IHasValue { }
+
+public interface IHasValues<out TValue> : IHasValues
+{
+    public IReadOnlyList<TValue> Values { get; }
+}

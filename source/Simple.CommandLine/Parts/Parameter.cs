@@ -2,21 +2,26 @@
 
 public abstract class Parameter : Argument, IHasValue
 {
-    protected Parameter(string name, string? description = null, Action<Command>? onRead = null)
-        : base(name, description, false, onRead)
+    protected Parameter(string name, string? description = null, Action<Token>? onRead = null)
+        : base(TokenType.Parameter, name, '\0', description, onRead)
     {
     }
 }
 
-public class Parameter<TValue> : Parameter
+public class Parameter<TValue> : Parameter, IHasValue<TValue>
 {
-    public Parameter(string name, string? description = null, Action<Command>? onRead = null)
+    public Parameter(string name, string? description = null, Action<Token>? onRead = null)
     : base(name, description, onRead)
     {
+        ValueType = typeof(TValue);
     }
 
-    internal TValue Value { get; private set; } = default!;
+    public sealed override Type ValueType { get; }
+    public TValue Value { get; private set; } = default!;
 
-    protected sealed override void Read(ref Span<string> arguments) =>
+    protected sealed override Span<string> Read(Span<string> arguments)
+    {
         Value = (TValue)Convert.ChangeType(arguments[0], typeof(TValue));
+        return arguments;
+    }
 }

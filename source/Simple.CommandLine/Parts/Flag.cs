@@ -1,18 +1,21 @@
 ﻿namespace Simple.CommandLine.Parts;
 
-public class Flag : Option
+public class Flag : Argument, IHasValue<bool>
 {
-    public Flag(string name, char alias, string? description = null, bool isInheritable = false, Action<Command>? onRead = null)
-        : base(name, alias, description, isInheritable, onRead)
+    public Flag(string name, char alias, string? description = null, bool existsIfTrue = false, Action<Token>? onRead = null)
+        : base(TokenType.Flag, name, alias, description, onRead)
+    {
+        ValueType = typeof(bool);
+        ExitsIfTrue = existsIfTrue;
+    }
+
+    public Flag(string name, string? description = null, bool existsIfSet = false, Action<Token>? onRead = null)
+        : this(name, '\0', description, existsIfSet, onRead)
     {
     }
 
-    public Flag(string name, string? description = null, bool availableToSubCommands = false, Action<Command>? onRead = null)
-        : this(name, '\0', description, availableToSubCommands, onRead)
-    {
-    }
-
-    public bool IsEnable { get; private set; }
-
-    protected sealed override void Read(ref Span<string> _) => IsEnable = true;
+    public sealed override Type ValueType { get; }
+    public bool Value => IsSet;
+    public bool ExitsIfTrue { get; }
+    protected sealed override Span<string> Read(Span<string> arguments) => arguments;
 }

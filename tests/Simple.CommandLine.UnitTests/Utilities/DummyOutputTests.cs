@@ -13,8 +13,8 @@ public class DummyOutputTests
         ((Action)(() => subject.ForegroundColor = ConsoleColor.Black)).Should().Throw<NotImplementedException>();
         ((Action)(() => _ = subject.BackgroundColor)).Should().Throw<NotImplementedException>();
         ((Action)(() => subject.BackgroundColor = ConsoleColor.White)).Should().Throw<NotImplementedException>();
-        ((Action)(() => _ = subject.IsVerbose)).Should().Throw<NotImplementedException>();
-        ((Action)(() => subject.IsVerbose = false)).Should().Throw<NotImplementedException>();
+        ((Action)(() => _ = subject.VerboseLevel)).Should().Throw<NotImplementedException>();
+        ((Action)(() => subject.VerboseLevel = VerboseLevel.Silent)).Should().Throw<NotImplementedException>();
         ((Action)(() => _ = subject.UseColors)).Should().Throw<NotImplementedException>();
         ((Action)(() => subject.UseColors = false)).Should().Throw<NotImplementedException>();
         ((Action)(() => subject.ResetColor())).Should().Throw<NotImplementedException>();

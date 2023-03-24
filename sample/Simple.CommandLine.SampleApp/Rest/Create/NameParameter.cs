@@ -1,6 +1,4 @@
-﻿using Simple.CommandLine.Parts;
-
-namespace Simple.CommandLine.SampleApp.Rest.Create;
+﻿namespace Simple.CommandLine.SampleApp.Rest.Create;
 
 internal sealed class NameParameter : Parameter<string>
 {

@@ -2,7 +2,7 @@
 
 public interface IOutputWriter {
     bool UseColors { get; set; }
-    bool IsVerbose { get; set; }
+    VerboseLevel VerboseLevel { get; set; }
 
     ConsoleColor ForegroundColor { get; set; }
     ConsoleColor BackgroundColor { get; set; }

@@ -16,7 +16,7 @@ public abstract class DummyOutputWriter : IOutputWriter {
         set => throw new NotImplementedException();
     }
 
-    public bool IsVerbose {
+    public VerboseLevel VerboseLevel {
         get => throw new NotImplementedException();
         set => throw new NotImplementedException();
     }

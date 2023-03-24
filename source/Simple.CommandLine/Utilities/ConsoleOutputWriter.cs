@@ -3,7 +3,7 @@
 [ExcludeFromCodeCoverage(Justification = "Testing the system.")]
 public sealed class ConsoleOutputWriter : IOutputWriter {
     public bool UseColors { get; set; } = true;
-    public bool IsVerbose { get; set; }
+    public VerboseLevel VerboseLevel { get; set; } = VerboseLevel.Normal;
 
     public ConsoleColor ForegroundColor {
         get => Console.ForegroundColor;

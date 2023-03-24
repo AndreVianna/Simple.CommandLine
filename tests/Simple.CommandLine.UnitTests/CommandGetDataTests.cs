@@ -1,8 +1,10 @@
-﻿namespace Simple.CommandLine;
+﻿using System;
+
+namespace Simple.CommandLine;
 
 public class CommandGetDataTests {
     private readonly InMemoryOutputWriter _writer = new();
-    private readonly Command _testCommand;
+    private readonly SubCommand _testCommand;
 
     public CommandGetDataTests() {
         _testCommand = new("test") {
@@ -12,7 +14,7 @@ public class CommandGetDataTests {
 
     [Fact]
     public void Command_GetValueOrDefault_BeforeExecute_ReturnsDefault() {
-        _testCommand.AddOption<string>(new("option"));
+        _testCommand.Add(new Option<string>("option"));
 
         var value = _testCommand.GetValueOrDefault<string>("option");
 
@@ -25,13 +27,13 @@ public class CommandGetDataTests {
 
         var action = () => _testCommand.GetValueOrDefault<string>("");
 
-        action.Should().Throw<ArgumentException>().WithMessage("Name cannot be null or whitespace. (Parameter 'name')");
+        action.Should().Throw<ArgumentException>().WithMessage("The name cannot be null or whitespace. (Parameter 'name')");
     }
 
     [Fact]
     public void Command_GetValueOrDefault_ReturnsValue() {
-        _testCommand.AddOption<string>(new("option"));
-        _testCommand.Execute(new[] { "--option", "some value" });
+        _testCommand.Add(new Option<string>("option"));
+        _testCommand.Execute("--option", "some value");
 
         var value = _testCommand.GetValueOrDefault<string>("option");
 
@@ -40,7 +42,7 @@ public class CommandGetDataTests {
 
     [Fact]
     public void Command_GetValueOrDefault_ForParameter_WhenNotSet_ReturnsDefault() {
-        _testCommand.AddParameter<string>(new("option"));
+        _testCommand.Add(new Parameter<string>("option"));
         _testCommand.Execute();
 
         var value = _testCommand.GetValueOrDefault<string>("option");
@@ -50,28 +52,28 @@ public class CommandGetDataTests {
 
     [Fact]
     public void Command_GetValueOrDefault_WithWrongType_Throws() {
-        _testCommand.AddOption<string>(new("option"));
-        _testCommand.Execute(new[] { "--option", "some value" });
+        _testCommand.Add(new Option<string>("option"));
+        _testCommand.Execute("--option", "some value");
 
         var action = () => _testCommand.GetValueOrDefault<int>("option");
 
-        action.Should().Throw<InvalidCastException>().WithMessage("Cannot cast value 'option' to 'Int32'.");
+        action.Should().Throw<InvalidCastException>().WithMessage("Cannot get Int32 from option 'option' (System.String).");
     }
 
     [Fact]
     public void Command_GetValueOrDefault_ForParameter_WithWrongType_Throws() {
-        _testCommand.AddParameter<string>(new("option"));
-        _testCommand.Execute(new[] { "--option", "some value" });
+        _testCommand.Add(new Parameter<string>("option"));
+        _testCommand.Execute("--option", "some value");
 
         var action = () => _testCommand.GetValueOrDefault<int>("option");
 
-        action.Should().Throw<InvalidCastException>().WithMessage("Cannot cast value 'option' to 'Int32'.");
+        action.Should().Throw<InvalidCastException>().WithMessage("Cannot get Int32 from parameter 'option' (System.String).");
     }
 
     [Fact]
     public void Command_GetValueOrDefault_WhenSetByAlias_ReturnsValue() {
-        _testCommand.AddOption<string>(new("option", 'o'));
-        _testCommand.Execute(new[] { "-o", "some value" });
+        _testCommand.Add(new Option<string>("option", 'o'));
+        _testCommand.Execute("-o", "some value");
 
         var value = _testCommand.GetValueOrDefault<string>("option");
 
@@ -80,7 +82,7 @@ public class CommandGetDataTests {
 
     [Fact]
     public void Command_GetValueOrDefault_WhenNotSet_ReturnsDefault() {
-        _testCommand.AddOption<string>(new("option"));
+        _testCommand.Add(new Option<string>("option"));
         _testCommand.Execute();
 
         var value = _testCommand.GetValueOrDefault<string>("option");
@@ -92,111 +94,111 @@ public class CommandGetDataTests {
     public void Command_GetValueOrDefault_WhenNotAdded_ReturnsDefault() {
         _testCommand.Execute();
 
-        var value = _testCommand.GetValueOrDefault<string>("option");
+        var action = () => _testCommand.GetValueOrDefault<string>("option");
 
-        value.Should().BeNull();
+        action.Should().Throw<ArgumentException>().WithMessage("Argument 'option' not found. (Parameter 'nameOrAlias')");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_BeforeExecute_Throws() {
-        _testCommand.AddOption<string>(new("option"));
+    public void Command_GetValue_BeforeExecute_Throws() {
+        _testCommand.Add(new Option<string>("option"));
 
-        var action = () => _testCommand.GetRequiredValue<string>("option");
+        var action = () => _testCommand.GetValue<string>("option");
 
-        action.Should().Throw<InvalidOperationException>().WithMessage("Missing required value 'option'.");
+        action.Should().Throw<ArgumentException>().WithMessage("Option 'option' not set. (Parameter 'nameOrAlias')");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_WithEmptyName_Throws() {
+    public void Command_GetValue_WithEmptyName_Throws() {
         _testCommand.Execute();
 
-        var action = () => _testCommand.GetRequiredValue<string>("");
+        var action = () => _testCommand.GetValue<string>("");
 
-        action.Should().Throw<ArgumentException>().WithMessage("Name cannot be null or whitespace. (Parameter 'name')");
+        action.Should().Throw<ArgumentException>().WithMessage("The name cannot be null or whitespace. (Parameter 'name')");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_ReturnsValue() {
-        _testCommand.AddOption<string>(new("option"));
-        _testCommand.Execute(new[] { "--option", "some value" });
+    public void Command_GetValue_ReturnsValue() {
+        _testCommand.Add(new Option<string>("option"));
+        _testCommand.Execute("--option", "some value");
 
-        var value = _testCommand.GetRequiredValue<string>("option");
+        var value = _testCommand.GetValue<string>("option");
 
         value.Should().Be("some value");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_ForParameter_ReturnsValue() {
-        _testCommand.AddParameter<string>(new("option"));
-        _testCommand.Execute(new[] { "some value" });
+    public void Command_GetValue_ForParameter_ReturnsValue() {
+        _testCommand.Add(new Parameter<string>("option"));
+        _testCommand.Execute("some value");
 
-        var value = _testCommand.GetRequiredValue<string>("option");
-
-        value.Should().Be("some value");
-    }
-
-    [Fact]
-    public void Command_GetRequiredValue_WithWrongType_ReturnsValue() {
-        _testCommand.AddOption<string>(new("option"));
-        _testCommand.Execute(new[] { "--option", "some value" });
-
-        var action = () => _testCommand.GetRequiredValue<int>("option");
-
-        action.Should().Throw<InvalidCastException>().WithMessage("Cannot cast value 'option' to 'Int32'.");
-    }
-
-    [Fact]
-    public void Command_GetRequiredValue_ForParameter_WithWrongType_ReturnsValue() {
-        _testCommand.AddParameter<string>(new("option"));
-        _testCommand.Execute(new[] { "some value" });
-
-        var action = () => _testCommand.GetRequiredValue<int>("option");
-
-        action.Should().Throw<InvalidCastException>().WithMessage("Cannot cast value 'option' to 'Int32'.");
-    }
-
-    [Fact]
-    public void Command_GetRequiredValue_WhenSetByAlias_ReturnsValue() {
-        _testCommand.AddOption<string>(new("option", 'o'));
-        _testCommand.Execute(new[] { "-o", "some value" });
-
-        var value = _testCommand.GetRequiredValue<string>("option");
+        var value = _testCommand.GetValue<string>("option");
 
         value.Should().Be("some value");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_WhenNotSet_Throws() {
-        _testCommand.AddOption<string>(new("option"));
-        _testCommand.Execute();
+    public void Command_GetValue_WithWrongType_ReturnsValue() {
+        _testCommand.Add(new Option<string>("option"));
+        _testCommand.Execute("--option", "some value");
 
-        var action = () => _testCommand.GetRequiredValue<string>("option");
+        var action = () => _testCommand.GetValue<int>("option");
 
-        action.Should().Throw<InvalidOperationException>().WithMessage("Missing required value 'option'.");
+        action.Should().Throw<InvalidCastException>().WithMessage("Cannot get Int32 from option 'option' (System.String).");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_ForParameter_WhenNotSet_ReturnsValue() {
-        _testCommand.AddParameter<string>(new("option"));
-        _testCommand.Execute();
+    public void Command_GetValue_ForParameter_WithWrongType_ReturnsValue() {
+        _testCommand.Add(new Parameter<string>("option"));
+        _testCommand.Execute("some value");
 
-        var action = () => _testCommand.GetRequiredValue<string>("option");
+        var action = () => _testCommand.GetValue<int>("option");
 
-        action.Should().Throw<InvalidOperationException>().WithMessage("Missing required value 'option'.");
+        action.Should().Throw<InvalidCastException>().WithMessage("Cannot get Int32 from parameter 'option' (System.String).");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_WhenNotAdded_Throws() {
+    public void Command_GetValue_WhenSetByAlias_ReturnsValue() {
+        _testCommand.Add(new Option<string>("option", 'o'));
+        _testCommand.Execute("-o", "some value");
+
+        var value = _testCommand.GetValue<string>("option");
+
+        value.Should().Be("some value");
+    }
+
+    [Fact]
+    public void Command_GetValue_WhenNotSet_Throws() {
+        _testCommand.Add(new Option<string>("option"));
         _testCommand.Execute();
 
-        var action = () => _testCommand.GetRequiredValue<string>("option");
+        var action = () => _testCommand.GetValue<string>("option");
 
-        action.Should().Throw<InvalidOperationException>().WithMessage("Required value 'option' not defined.");
+        action.Should().Throw<ArgumentException>().WithMessage("Option 'option' not set. (Parameter 'nameOrAlias')");
+    }
+
+    [Fact]
+    public void Command_GetValue_ForParameter_WhenNotSet_ReturnsValue() {
+        _testCommand.Add(new Parameter<string>("option"));
+        _testCommand.Execute();
+
+        var action = () => _testCommand.GetValue<string>("option");
+
+        action.Should().Throw<ArgumentException>().WithMessage("Parameter 'option' not set. (Parameter 'nameOrAlias')");
+    }
+
+    [Fact]
+    public void Command_GetValue_WhenNotAdded_Throws() {
+        _testCommand.Execute();
+
+        var action = () => _testCommand.GetValue<string>("option");
+
+        action.Should().Throw<ArgumentException>().WithMessage("Argument 'option' not found. (Parameter 'nameOrAlias')");
     }
 
     [Fact]
     public void Command_GetValueOrDefault_ByIndex_BeforeExecute_ReturnsDefault() {
-        _testCommand.AddParameter<string>(new("argument"));
+        _testCommand.Add(new Parameter<string>("argument"));
 
         var value = _testCommand.GetValueOrDefault<string>(0);
 
@@ -205,8 +207,8 @@ public class CommandGetDataTests {
 
     [Fact]
     public void Command_GetValueOrDefault_ByIndex_ReturnsValue() {
-        _testCommand.AddParameter<string>(new("argument"));
-        _testCommand.Execute(new[] { "some value" });
+        _testCommand.Add(new Parameter<string>("argument"));
+        _testCommand.Execute("some value");
 
         var value = _testCommand.GetValueOrDefault<string>(0);
 
@@ -217,14 +219,14 @@ public class CommandGetDataTests {
     public void Command_GetValueOrDefault_ByIndex_WithIndexOutOfRange_ReturnsDefault() {
         _testCommand.Execute();
 
-        var value = _testCommand.GetValueOrDefault<string>(0);
+        var action = () => _testCommand.GetValueOrDefault<string>(0);
 
-        value.Should().BeNull();
+        action.Should().Throw<ArgumentException>().WithMessage("The command contains no parameters. (Parameter 'index')");
     }
 
     [Fact]
     public void Command_GetValueOrDefault_ByIndex_WhenNotSet_ReturnsDefault() {
-        _testCommand.AddParameter<string>(new("argument"));
+        _testCommand.Add(new Parameter<string>("argument"));
         _testCommand.Execute();
 
         var value = _testCommand.GetValueOrDefault<string>(0);
@@ -234,251 +236,218 @@ public class CommandGetDataTests {
 
     [Fact]
     public void Command_GetValueOrDefault_ByIndex_WithWrongType_Throws() {
-        _testCommand.AddParameter<string>(new("argument"));
-        _testCommand.Execute(new[] { "some value" });
+        _testCommand.Add(new Parameter<string>("argument"));
+        _testCommand.Execute("some value");
 
         var action = () => _testCommand.GetValueOrDefault<int>(0);
 
-        action.Should().Throw<InvalidCastException>().WithMessage("Cannot cast parameter at index 0 to 'Int32'.");
+        action.Should().Throw<InvalidCastException>().WithMessage("Cannot get Int32 from parameter 'argument' (System.String).");
     }
 
     [Fact]
-    public void Command_GetFlagOrDefault_BeforeExecute_ReturnsDefault() {
-        _testCommand.AddParameter<string>(new("argument"));
+    public void Command_GetValue_ByIndex_ReturnsValue() {
+        _testCommand.Add(new Parameter<string>("option"));
+        _testCommand.Execute("some value");
 
-        var value = _testCommand.GetFlagOrDefault("flag");
-
-        value.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Command_GetRequiredValue_ByIndex_BeforeExecute_Throws() {
-        _testCommand.AddParameter<string>(new("option"));
-
-        var action = () => _testCommand.GetRequiredValue<string>(0);
-
-        action.Should().Throw<InvalidOperationException>().WithMessage("Missing required parameter at index 0.");
-    }
-
-    [Fact]
-    public void Command_GetRequiredValue_ByIndex_ReturnsValue() {
-        _testCommand.AddParameter<string>(new("option"));
-        _testCommand.Execute(new[] { "some value" });
-
-        var value = _testCommand.GetRequiredValue<string>(0);
+        var value = _testCommand.GetValue<string>(0);
 
         value.Should().Be("some value");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_ByIndex_WithWrongType_Throws() {
-        _testCommand.AddParameter<string>(new("option"));
-        _testCommand.Execute(new[] { "some value" });
+    public void Command_GetValue_ByIndex_WithWrongType_Throws() {
+        _testCommand.Add(new Parameter<string>("option"));
+        _testCommand.Execute("some value");
 
-        var action = () => _testCommand.GetRequiredValue<int>(0);
+        var action = () => _testCommand.GetValue<int>(0);
 
-        action.Should().Throw<InvalidCastException>().WithMessage("Cannot cast parameter at index 0 to 'Int32'.");
+        action.Should().Throw<InvalidCastException>().WithMessage("Cannot get Int32 from parameter 'option' (System.String).");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_ByIndex_WhenNotSet_Throws() {
-        _testCommand.AddParameter<string>(new("option"));
+    public void Command_GetValue_ByIndex_WhenNotSet_Throws() {
+        _testCommand.Add(new Parameter<string>("option"));
         _testCommand.Execute();
 
-        var action = () => _testCommand.GetRequiredValue<string>(0);
+        var action = () => _testCommand.GetValue<string>(0);
 
-        action.Should().Throw<InvalidOperationException>().WithMessage("Missing required parameter at index 0.");
+        action.Should().Throw<ArgumentException>().WithMessage("Parameter '0' not set. (Parameter 'index')");
     }
 
     [Fact]
-    public void Command_GetRequiredValue_ByIndex_WhenNotAdded_Throws() {
+    public void Command_GetValue_ByIndex_WhenOutOfRange_Throws()
+    {
+        _testCommand.Add(new Parameter<string>("option"));
         _testCommand.Execute();
 
-        var action = () => _testCommand.GetRequiredValue<string>(0);
+        var action = () => _testCommand.GetValue<string>(2);
 
-        action.Should().Throw<ArgumentOutOfRangeException>().WithMessage("Parameter at index 0 not found. Parameter count is 0. (Parameter 'index')");
+        action.Should().Throw<ArgumentOutOfRangeException>().WithMessage("The index is out of range (Min: 0, Max: 0). (Parameter 'index')\nActual value was 2.");
     }
 
     [Fact]
-    public void Command_GetFlagOrDefault_WithEmptyName_Throws() {
+    public void Command_GetValue_ByIndex_WhenNotAdded_Throws() {
         _testCommand.Execute();
 
-        var action = () => _testCommand.GetFlagOrDefault("");
+        var action = () => _testCommand.GetValue<string>(0);
 
-        action.Should().Throw<ArgumentException>().WithMessage("Name cannot be null or whitespace. (Parameter 'name')");
+        action.Should().Throw<ArgumentException>().WithMessage("The command contains no parameters. (Parameter 'index')");
     }
 
     [Fact]
-    public void Command_GetFlagOrDefault_ReturnsValue() {
-        _testCommand.AddFlag(new("flag"));
-        _testCommand.Execute(new[] { "--flag" });
+    public void Command_IsFlagSet_WithEmptyName_Throws() {
+        _testCommand.Execute();
 
-        var value = _testCommand.GetFlagOrDefault("flag");
+        var action = () => _testCommand.IsFlagSet("");
+
+        action.Should().Throw<ArgumentException>().WithMessage("The name cannot be null or whitespace. (Parameter 'name')");
+    }
+
+    [Fact]
+    public void Command_IsFlagSet_ReturnsValue() {
+        _testCommand.Add(new Flag("flag"));
+        _testCommand.Execute("--flag");
+
+        var value = _testCommand.IsFlagSet("flag");
 
         value.Should().BeTrue();
     }
 
     [Fact]
-    public void Command_GetFlagOrDefault_WhenSetByAlias_ReturnsValue() {
-        _testCommand.AddFlag(new("flag", 'f'));
-        _testCommand.Execute(new[] { "-f" });
+    public void Command_IsFlagSet_WhenSetByAlias_ReturnsValue() {
+        _testCommand.Add(new Flag("flag", 'f'));
+        _testCommand.Execute("-f");
 
-        var value = _testCommand.GetFlagOrDefault("flag");
+        var value = _testCommand.IsFlagSet("flag");
 
         value.Should().BeTrue();
     }
 
     [Fact]
-    public void Command_GetFlagOrDefault_WhenNotSet_ReturnsDefault() {
-        _testCommand.AddFlag(new("flag"));
+    public void Command_IsFlagSet_WhenAdded_ReturnsDefault()
+    {
         _testCommand.Execute();
 
-        var value = _testCommand.GetFlagOrDefault("flag");
+        var action = () => _testCommand.IsFlagSet("flag");
+
+        action.Should().Throw<ArgumentException>().WithMessage("Argument 'flag' not found. (Parameter 'nameOrAlias')");
+    }
+
+    [Fact]
+    public void Command_IsFlagSet_WhenNotSet_ReturnsDefault() {
+        _testCommand.Add(new Flag("flag"));
+        _testCommand.Execute();
+
+        var value = _testCommand.IsFlagSet("flag");
 
         value.Should().BeFalse();
     }
 
     [Fact]
-    public void Command_GetRequiredFlagOrDefault_WithEmptyName_Throws() {
+    public void Command_IsFlagSet_WhenWrongType_ReturnsDefault()
+    {
+        _testCommand.Add(new Option<int>("flag"));
         _testCommand.Execute();
 
-        var action = () => _testCommand.GetRequiredFlag("");
+        var action = () => _testCommand.IsFlagSet("flag");
 
-        action.Should().Throw<ArgumentException>().WithMessage("Name cannot be null or whitespace. (Parameter 'name')");
-    }
-
-    [Fact]
-    public void Command_GetRequiredFlagOrDefault_ReturnsValue() {
-        _testCommand.AddFlag(new("flag"));
-        _testCommand.Execute(new[] { "--flag" });
-
-        var value = _testCommand.GetRequiredFlag("flag");
-
-        value.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Command_GetRequiredFlagOrDefault_WhenSetByAlias_ReturnsValue() {
-        _testCommand.AddFlag(new("flag", 'f'));
-        _testCommand.Execute(new[] { "-f" });
-
-        var value = _testCommand.GetRequiredFlag("flag");
-
-        value.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Command_GetRequiredFlagOrDefault_WhenNotSet_Throws() {
-        _testCommand.AddFlag(new("flag"));
-        _testCommand.Execute();
-
-        var action = () => _testCommand.GetRequiredFlag("flag");
-
-        action.Should().Throw<InvalidOperationException>().WithMessage("Missing required flag 'flag'.");
-    }
-
-    [Fact]
-    public void Command_GetRequiredFlagOrDefault_WhenNotAdd_Throws() {
-        _testCommand.Execute();
-
-        var action = () => _testCommand.GetRequiredFlag("flag");
-
-        action.Should().Throw<InvalidOperationException>().WithMessage("Required flag 'flag' not defined.");
+        action.Should().Throw<ArgumentException>().WithMessage("Argument 'flag' is not a flag. (Parameter 'nameOrAlias')");
     }
 
     [Fact]
     public void Command_GetCollectionOrDefault_WithEmptyName_Throws() {
         _testCommand.Execute();
 
-        var action = () => _testCommand.GetCollectionOrDefault<string>("");
+        var action = () => _testCommand.GetValuesOrDefault<string>("");
 
-        action.Should().Throw<ArgumentException>().WithMessage("Name cannot be null or whitespace. (Parameter 'name')");
+        action.Should().Throw<ArgumentException>().WithMessage("The name cannot be null or whitespace. (Parameter 'name')");
     }
 
     [Fact]
     public void Command_GetCollectionOrDefault_ReturnsValue() {
-        _testCommand.AddMultiOption<string>(new("option", 'o'));
-        _testCommand.Execute(new[] { "--option", "value1", "-o", "value2" });
+        _testCommand.Add(new Options<string>("option", 'o'));
+        _testCommand.Execute("--option", "value1", "-o", "value2");
 
-        var value = _testCommand.GetCollectionOrDefault<string>("option");
+        var value = _testCommand.GetValuesOrDefault<string>("option");
 
         value.Should().BeEquivalentTo("value1", "value2");
     }
 
     [Fact]
     public void Command_GetCollectionOrDefault_WhenNotSet_ReturnsEmpty() {
-        _testCommand.AddMultiOption<string>(new("option"));
+        _testCommand.Add(new Options<string>("option"));
         _testCommand.Execute();
 
-        var value = _testCommand.GetCollectionOrDefault<string>("option");
+        var value = _testCommand.GetValuesOrDefault<string>("option");
 
         value.Should().BeEmpty();
     }
 
     [Fact]
     public void Command_GetCollectionOrDefault_WithWrongType_Throws() {
-        _testCommand.AddMultiOption<string>(new("option"));
-        _testCommand.Execute(new[] { "--option", "value1", "-o", "value2" });
+        _testCommand.Add(new Options<string>("option"));
+        _testCommand.Execute("--option", "value1", "-o", "value2");
 
-        var action = () => _testCommand.GetCollectionOrDefault<int>("option");
+        var action = () => _testCommand.GetValuesOrDefault<int>("option");
 
-        action.Should().Throw<InvalidCastException>().WithMessage("Cannot cast value 'option' to a collection of 'Int32'.");
+        action.Should().Throw<InvalidCastException>().WithMessage("Cannot get Int32[] from option 'option' (System.String[]).");
     }
 
     [Fact]
     public void Command_GetCollectionOrDefault_WhenNotAdded_ReturnsEmpty() {
         _testCommand.Execute();
 
-        var value = _testCommand.GetCollectionOrDefault<string>("option");
+        var action = () => _testCommand.GetValuesOrDefault<string>("option");
 
-        value.Should().BeEmpty();
+        action.Should().Throw<ArgumentException>().WithMessage("Argument 'option' not found. (Parameter 'nameOrAlias')");
     }
 
     [Fact]
-    public void Command_GetRequiredCollection_WithEmptyName_Throws() {
+    public void Command_GetValues_WithEmptyName_Throws() {
         _testCommand.Execute();
 
-        var action = () => _testCommand.GetRequiredCollection<string>("");
+        var action = () => _testCommand.GetValues<string>("");
 
-        action.Should().Throw<ArgumentException>().WithMessage("Name cannot be null or whitespace. (Parameter 'name')");
+        action.Should().Throw<ArgumentException>().WithMessage("The name cannot be null or whitespace. (Parameter 'name')");
     }
 
     [Fact]
-    public void Command_GetRequiredCollection_ReturnsValue() {
-        _testCommand.AddMultiOption<string>(new("option", 'o'));
-        _testCommand.Execute(new[] { "--option", "value1", "-o", "value2" });
+    public void Command_GetValues_ReturnsValue() {
+        _testCommand.Add(new Options<string>("option", 'o'));
+        _testCommand.Execute("--option", "value1", "-o", "value2");
 
-        var value = _testCommand.GetRequiredCollection<string>("option");
+        var value = _testCommand.GetValues<string>("option");
 
         value.Should().BeEquivalentTo("value1", "value2");
     }
 
     [Fact]
-    public void Command_GetRequiredCollection_WithWrongType_Throws() {
-        _testCommand.AddMultiOption<string>(new("option"));
-        _testCommand.Execute(new[] { "--option", "value1", "-o", "value2" });
+    public void Command_GetValues_WithWrongType_Throws() {
+        _testCommand.Add(new Options<string>("option"));
+        _testCommand.Execute("--option", "value1", "-o", "value2");
 
-        var action = () => _testCommand.GetRequiredCollection<int>("option");
+        var action = () => _testCommand.GetValues<int>("option");
 
-        action.Should().Throw<InvalidCastException>().WithMessage("Cannot cast value 'option' to a collection of 'Int32'.");
+        action.Should().Throw<InvalidCastException>().WithMessage("Cannot get Int32[] from option 'option' (System.String[]).");
     }
 
     [Fact]
-    public void Command_GetRequiredCollection_WhenNotSet_ReturnsEmpty() {
-        _testCommand.AddMultiOption<string>(new("option"));
+    public void Command_GetValues_WhenNotSet_ReturnsEmpty() {
+        _testCommand.Add(new Options<string>("option"));
         _testCommand.Execute();
 
-        var value = _testCommand.GetRequiredCollection<string>("option");
+        var action = () => _testCommand.GetValues<string>("option");
 
-        value.Should().BeEmpty();
+
+        action.Should().Throw<ArgumentException>().WithMessage("Option 'option' not set. (Parameter 'nameOrAlias')");
     }
 
     [Fact]
-    public void Command_GetRequiredCollection_WhenNotAdd_Throws() {
+    public void Command_GetValues_WhenNotAdd_Throws() {
         _testCommand.Execute();
 
-        var action = () => _testCommand.GetRequiredCollection<string>("option");
+        var action = () => _testCommand.GetValues<string>("option");
 
-        action.Should().Throw<InvalidOperationException>().WithMessage("Required option 'option' not defined.");
+        action.Should().Throw<ArgumentException>().WithMessage("Argument 'option' not found. (Parameter 'nameOrAlias')");
     }
 }

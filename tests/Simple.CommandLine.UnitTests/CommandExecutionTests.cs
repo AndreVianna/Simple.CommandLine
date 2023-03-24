@@ -5,32 +5,66 @@ public class CommandExecutionTests {
 
     [Fact]
     public void Command_Execute_WithException_AndVerboseFlagAndNoColor_ShowError() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(_ => throw new("Some exception."))
-            .AddFlag(new DefaultVerboseFlag())
-            .AddFlag(new DefaultNoColorFlag())
             .Build();
 
-        subject.Execute("-v", "--no-color");
+        subject.Execute("-v", "2", "--no-color");
 
-        _writer.Output.Should().Contain("An error occurred while executing command 'testhost'.\nSystem.Exception: Some exception.");
+        _writer.Output.Should().Be("An error occurred while executing command 'testhost'.\n");
     }
 
     [Fact]
-    public void Command_Execute_WithException_AndVerboseFlag_ShowError() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+    public void Command_Execute_WithException_AndVerboseLevel_Detailed_ShowError() {
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(_ => throw new("Some exception."))
-            .AddFlag(new DefaultVerboseFlag())
             .Build();
 
-        subject.Execute("-v");
+        subject.Execute("-v", "2");
 
-        _writer.Output.Should().Contain("An error occurred while executing command 'testhost'.\nSystem.Exception: Some exception.");
+        _writer.Output.Should().Be("An error occurred while executing command 'testhost'.\n");
+    }
+
+    [Fact]
+    public void Command_Execute_WithException_AndVerboseLevel_Silent_ShowNotShowError()
+    {
+        var subject = CommandBuilder.FromRoot(_writer)
+            .OnExecute(_ => throw new("Some exception."))
+            .Build();
+
+        subject.Execute("-v", "6");
+
+        _writer.Output.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Command_Execute_WithException_AndVerboseLevel_Debug_ShowErrorWithException()
+    {
+        var subject = CommandBuilder.FromRoot(_writer)
+            .OnExecute(_ => throw new("Some exception."))
+            .Build();
+
+        subject.Execute("-v", "1");
+
+        _writer.Output.Should().Contain("An error occurred while executing command 'testhost'.\nSystem.Exception: Some exception.\n");
+    }
+
+
+    [Fact]
+    public void Command_Execute_WriteError_WithoutException_AndVerboseLevel_Silent_ShowNoError()
+    {
+        var subject = CommandBuilder.FromRoot(_writer)
+            .OnExecute(c => c.Writer.WriteError("Some error."))
+            .Build();
+
+        subject.Execute("-v", "6");
+
+        _writer.Output.Should().BeEmpty();
     }
 
     [Fact]
     public void Command_Execute_ExecutesDelegate() {
-        var subject = new Command("Command", "Command description.", c => c.Writer.WriteLine("Executing command...")) {
+        var subject = new SubCommand("Command", "Command description.", c => c.Writer.WriteLine("Executing command...")) {
             Writer = _writer
         };
 
@@ -41,9 +75,9 @@ public class CommandExecutionTests {
 
     [Fact]
     public void Command_Execute_WithTerminalOption_ExecutesDelegate() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(r => r.Writer.WriteLine("You should not be here!"))
-            .AddTerminalOption("option", onRead: c => c.Writer.WriteLine("Stop here!"))
+            .AddFlag("option", onRead: c => c.Writer.WriteLine("Stop here!"), existsIfSet: true)
             .Build();
 
         subject.Execute("--option");
@@ -53,7 +87,7 @@ public class CommandExecutionTests {
 
     [Fact]
     public void Command_Execute_WithUnknownOption_ExecutesDelegate() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(r => r.Writer.WriteLine("Executing command..."))
             .Build();
 
@@ -64,7 +98,7 @@ public class CommandExecutionTests {
 
     [Fact]
     public void Command_Execute_WithEmptyArgument_ExecutesDelegate() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(r => r.Writer.WriteLine("Executing command..."))
             .Build();
 
@@ -75,7 +109,7 @@ public class CommandExecutionTests {
 
     [Fact]
     public void Command_Execute_WithEmptyName_ExecutesDelegate() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(r => r.Writer.WriteLine("Executing command..."))
             .Build();
 
@@ -86,7 +120,7 @@ public class CommandExecutionTests {
 
     [Fact]
     public void Command_Execute_WithEmptyAlias_ExecutesDelegate() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(r => r.Writer.WriteLine("Executing command..."))
             .Build();
 
@@ -97,38 +131,22 @@ public class CommandExecutionTests {
 
     [Fact]
     public void Command_Execute_WithChildCommand_ExecutesDelegate() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(r => r.Writer.WriteLine("You should not be here!"))
-            .OnBeforeExecuteChild(r => r.Writer.WriteLine("Before execute child!"))
-            .AddCommand("child", setup: b =>
-                b.OnExecute(c => c.Writer.WriteLine("Executing child...")))
+            .OnBeforeSubCommand((_, r) => r.Writer.WriteLine("Before execute sub-Command!"))
+            .AddSubCommand("sub", setup: b =>
+                b.OnExecute(c => c.Writer.WriteLine("Executing sub-Command...")))
+            .OnAfterSubCommand((_, r) => r.Writer.WriteLine("Sub-Command executed!"))
             .Build();
 
-        subject.Execute("child");
+        subject.Execute("sub");
 
-        _writer.Output.Should().Be("Before execute child!\nExecuting child...\n");
-    }
-
-    [Fact]
-    public void Command_Execute_WithChildCommandAndContinuation_ExecutesDelegate() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
-            .OnExecute(r => r.Writer.WriteLine("Now you can see me!"))
-            .OnBeforeExecuteChild(r => r.Writer.WriteLine("Before execute child!"))
-            .AddCommand("child", setup: b =>
-                b.OnExecute(c => {
-                    c.Writer.WriteLine("Executing child...");
-                    c.TerminateExecution = false;
-                }))
-            .Build();
-
-        subject.Execute("child");
-
-        _writer.Output.Should().Be("Before execute child!\nExecuting child...\nNow you can see me!\n");
+        _writer.Output.Should().Be("Before execute sub-Command!\nExecuting sub-Command...\nSub-Command executed!\n");
     }
 
     [Fact]
     public void Command_Execute_WithExceptionDuringExecution_ShowError() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(_ => throw new("Some exception."))
             .Build();
 
@@ -139,19 +157,19 @@ public class CommandExecutionTests {
 
     [Fact]
     public void Command_Execute_WithExceptionDuringRead_ShowError() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(r => r.Writer.WriteLine("You should not be here!"))
             .AddOption<string>("option", onRead: _ => throw new("Some exception."))
             .Build();
 
         subject.Execute("--option", "abc");
 
-        _writer.Output.Should().Be("An error occurred while reading argument 'option'.\nAn error occurred while executing command 'testhost'.\n");
+        _writer.Output.Should().Be("An error occurred while reading option 'option'.\nAn error occurred while executing command 'testhost'.\n");
     }
 
     [Fact]
     public void Command_Execute_WithRootHelp_ShowsHelp() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer).Build();
+        var subject = CommandBuilder.FromRoot(_writer).Build();
 
         subject.Execute();
 
@@ -160,29 +178,38 @@ Simple.CommandLine 0.1.0-rc1
 
 This package provides tools for creating a simple CLI (Command-Line Interface) console application.
 
-Usage: testhost
+Usage: testhost [options]
+
+Options:
+  -h, --help             Show this help information and exit.
+  --no-color             Don't colorize output.
+  -v, --verbose <verbose> Show verbose output.
+  --version              Show version information and exit.
 
 ".Replace("\r", ""));
     }
 
     [Fact]
     public void Command_Execute_WithChildCommand_ShowsHelp() {
-        var subject = CommandBuilder.FromRoot().WithWriter(_writer)
+        var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(r => r.Writer.WriteLine("You should not be here!"))
-            .AddCommand("child")
+            .AddSubCommand("sub-Command")
             .Build();
 
-        subject.Execute("child");
+        subject.Execute("sub-Command");
 
         _writer.Output.Should().Be(@"
-Usage: testhost child
+Usage: testhost sub-Command
+
+Options:
+  -h, --help             Show this help information and exit.
 
 ".Replace("\r", ""));
     }
 
     [Fact]
     public void Command_Execute_DefaultRoot_ShowsHelp() {
-        var subject = CommandBuilder.FromDefaultRoot().WithWriter(_writer).Build();
+        var subject = CommandBuilder.FromRoot(_writer).Build();
 
         subject.Execute("--version");
 
@@ -191,12 +218,11 @@ Usage: testhost child
 
     [Fact]
     public void Command_Execute_WithHelpLongCommandName_ShowsHelp() {
-        var subject = new Command("command", "Command description.", c => c.Writer.WriteLine("You should not be here!"));
-        subject.AddTerminalOption(new DefaultHelpOption());
-        subject.AddOption(new Option<string>("options"));
-        subject.AddOption(new Option<string>("very-long-name", 'v', "Some description"));
-        subject.AddCommand(new("child", onExecute: c => c.Writer.WriteLine("Executing child...")));
-        subject.AddParameter(new Parameter<string>("param"));
+        var subject = new SubCommand("command", "Command description.", c => c.Writer.WriteLine("You should not be here!"));
+        subject.Add(new Option<string>("options"));
+        subject.Add(new Option<string>("very-long-name", 'v', "Some description"));
+        subject.Add(new SubCommand("sub-Command", onExecute: c => c.Writer.WriteLine("Executing sub-Command...")));
+        subject.Add(new Parameter<string>("param"));
         subject.Writer = _writer;
 
         subject.Execute("-h");
@@ -214,7 +240,7 @@ Parameters:
   <param>
 
 Commands:
-  child
+  sub-Command
 
 Use ""command [command] --help"" for more information about a command.
 

@@ -1,6 +1,4 @@
-﻿using Simple.CommandLine.Parts;
-
-namespace Simple.CommandLine.SampleApp;
+﻿namespace Simple.CommandLine.SampleApp;
 
 internal sealed class OutputOption : Option<string>
 {

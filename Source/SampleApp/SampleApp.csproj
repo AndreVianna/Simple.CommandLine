@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Tool\DotNetToolbox.CommandLineBuilder.csproj" />
+    <ProjectReference Include="..\DotNetToolbox.CommandLineBuilder\DotNetToolbox.CommandLineBuilder.csproj" />
   </ItemGroup>
 
 </Project>

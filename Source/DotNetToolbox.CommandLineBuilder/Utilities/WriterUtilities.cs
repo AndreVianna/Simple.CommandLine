@@ -2,7 +2,7 @@
 
 public static class WriterUtilities {
     public static void WriteVersion(this IOutputWriter writer, Command command) {
-        Assembly assembly = command.GetType().Assembly;
+        var assembly = command.GetType().Assembly;
         writer.WriteLine(GetAssemblyTitle(assembly));
         writer.WriteLine(GetAssemblyVersion(assembly));
     }
@@ -10,10 +10,10 @@ public static class WriterUtilities {
     public static void WriteHelp(this IOutputWriter writer, Command command) {
         if (command is RootCommand) writer.WriteRootHeader(command);
 
-        Token[] parameters = command.Tokens.OfType<Parameter>().Cast<Token>().ToArray();
-        Token[] options = command.Tokens.OfType<Option>().Cast<Token>().ToArray();
-        Token[] flags = command.Tokens.OfType<Flag>().Cast<Token>().ToArray();
-        Token[] subCommands = command.Tokens.OfType<SubCommand>().Cast<Token>().ToArray();
+        var parameters = command.Tokens.OfType<Parameter>().Cast<Token>().ToArray();
+        var options = command.Tokens.OfType<Option>().Cast<Token>().ToArray();
+        var flags = command.Tokens.OfType<Flag>().Cast<Token>().ToArray();
+        var subCommands = command.Tokens.OfType<SubCommand>().Cast<Token>().ToArray();
 
         writer.WriteLine();
         if (parameters.Length != 0) writer.WriteLine($"Usage: {command.Path} [parameters]{(options.Length != 0 ? " [options]" : "")}");
@@ -40,7 +40,7 @@ public static class WriterUtilities {
     public static void WriteError(this IOutputWriter writer, string message) {
         if (writer.VerboseLevel == VerboseLevel.Silent) return;
 
-        ConsoleColor oldColor = writer.ForegroundColor;
+        var oldColor = writer.ForegroundColor;
         try {
             if (writer.UseColors) writer.ForegroundColor = ConsoleColor.Red;
             writer.WriteLine(message);
@@ -52,11 +52,11 @@ public static class WriterUtilities {
 
     [ExcludeFromCodeCoverage]
     private static void WriteRootHeader(this IOutputWriter writer, Command command) {
-        Assembly assembly = command.GetType().Assembly;
+        var assembly = command.GetType().Assembly;
         writer.WriteLine();
         writer.WriteLine($"{GetAssemblyTitle(assembly)} {GetAssemblyVersion(assembly)}");
 
-        string? description = GetAssemblyDescription(assembly);
+        var description = GetAssemblyDescription(assembly);
         if (description is null) return;
         writer.WriteLine();
         writer.WriteLine(description);
@@ -66,7 +66,7 @@ public static class WriterUtilities {
         if (tokens.Count == 0) return;
         writer.WriteLine();
         writer.WriteLine(header);
-        foreach (Token token in tokens) writer.WriteLine(DescribeToken(token));
+        foreach (var token in tokens) writer.WriteLine(DescribeToken(token));
     }
 
     private static string DescribeToken(Token token) {
@@ -93,8 +93,8 @@ public static class WriterUtilities {
 
         if (token.Description.Length == 0) return builder.ToString();
 
-        int padding = 25;
-        int length = builder.Length;
+        var padding = 25;
+        var length = builder.Length;
         if (padding <= length) padding = length + 1;
         _ = builder.Append(' ', padding - length);
 
@@ -104,7 +104,7 @@ public static class WriterUtilities {
 
     [ExcludeFromCodeCoverage]
     private static string GetAssemblyTitle(Assembly assembly) {
-        AssemblyTitleAttribute? attribute = assembly.GetCustomAttribute<AssemblyTitleAttribute>();
+        var attribute = assembly.GetCustomAttribute<AssemblyTitleAttribute>();
         return attribute?.Title ?? assembly.GetName().Name!;
     }
 
@@ -114,5 +114,5 @@ public static class WriterUtilities {
 
     [ExcludeFromCodeCoverage]
     private static string GetAssemblyVersion(Assembly assembly)
-        => assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+        => string.Join(string.Empty, assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.TakeWhile(c => c != '+'));
 }

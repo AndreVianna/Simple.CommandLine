@@ -11,7 +11,7 @@ public class CommandExecutionTests {
 
         subject.Execute("-v", "2", "--no-color");
 
-        _writer.Output.Should().Be("An error occurred while executing command 'testhost'.\n");
+        _ = _writer.Output.Should().Be("An error occurred while executing command 'testhost'.\n");
     }
 
     [Fact]
@@ -22,43 +22,40 @@ public class CommandExecutionTests {
 
         subject.Execute("-v", "2");
 
-        _writer.Output.Should().Be("An error occurred while executing command 'testhost'.\n");
+        _ = _writer.Output.Should().Be("An error occurred while executing command 'testhost'.\n");
     }
 
     [Fact]
-    public void Command_Execute_WithException_AndVerboseLevel_Silent_ShowNotShowError()
-    {
+    public void Command_Execute_WithException_AndVerboseLevel_Silent_ShowNotShowError() {
         var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(_ => throw new("Some exception."))
             .Build();
 
         subject.Execute("-v", "6");
 
-        _writer.Output.Should().BeEmpty();
+        _ = _writer.Output.Should().BeEmpty();
     }
 
     [Fact]
-    public void Command_Execute_WithException_AndVerboseLevel_Debug_ShowErrorWithException()
-    {
+    public void Command_Execute_WithException_AndVerboseLevel_Debug_ShowErrorWithException() {
         var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(_ => throw new("Some exception."))
             .Build();
 
         subject.Execute("-v", "1");
 
-        _writer.Output.Should().Contain("An error occurred while executing command 'testhost'.\nSystem.Exception: Some exception.\n");
+        _ = _writer.Output.Should().Contain("An error occurred while executing command 'testhost'.\nSystem.Exception: Some exception.\n");
     }
 
     [Fact]
-    public void Command_Execute_WriteError_WithoutException_AndVerboseLevel_Silent_ShowNoError()
-    {
+    public void Command_Execute_WriteError_WithoutException_AndVerboseLevel_Silent_ShowNoError() {
         var subject = CommandBuilder.FromRoot(_writer)
             .OnExecute(c => c.Writer.WriteError("Some error."))
             .Build();
 
         subject.Execute("-v", "6");
 
-        _writer.Output.Should().BeEmpty();
+        _ = _writer.Output.Should().BeEmpty();
     }
 
     [Fact]
@@ -69,7 +66,7 @@ public class CommandExecutionTests {
 
         subject.Execute();
 
-        _writer.Output.Should().Be("Executing command...\n");
+        _ = _writer.Output.Should().Be("Executing command...\n");
     }
 
     [Fact]
@@ -81,7 +78,7 @@ public class CommandExecutionTests {
 
         subject.Execute("--option");
 
-        _writer.Output.Should().Be("Stop here!\n");
+        _ = _writer.Output.Should().Be("Stop here!\n");
     }
 
     [Fact]
@@ -92,7 +89,7 @@ public class CommandExecutionTests {
 
         subject.Execute("--option");
 
-        _writer.Output.Should().Be("Executing command...\n");
+        _ = _writer.Output.Should().Be("Executing command...\n");
     }
 
     [Fact]
@@ -103,7 +100,7 @@ public class CommandExecutionTests {
 
         subject.Execute("  ");
 
-        _writer.Output.Should().Be("Executing command...\n");
+        _ = _writer.Output.Should().Be("Executing command...\n");
     }
 
     [Fact]
@@ -114,7 +111,7 @@ public class CommandExecutionTests {
 
         subject.Execute("--");
 
-        _writer.Output.Should().Be("Executing command...\n");
+        _ = _writer.Output.Should().Be("Executing command...\n");
     }
 
     [Fact]
@@ -125,7 +122,7 @@ public class CommandExecutionTests {
 
         subject.Execute("-");
 
-        _writer.Output.Should().Be("Executing command...\n");
+        _ = _writer.Output.Should().Be("Executing command...\n");
     }
 
     [Fact]
@@ -140,7 +137,7 @@ public class CommandExecutionTests {
 
         subject.Execute("sub");
 
-        _writer.Output.Should().Be("Before execute sub-Command!\nExecuting sub-Command...\nSub-Command executed!\n");
+        _ = _writer.Output.Should().Be("Before execute sub-Command!\nExecuting sub-Command...\nSub-Command executed!\n");
     }
 
     [Fact]
@@ -151,7 +148,7 @@ public class CommandExecutionTests {
 
         subject.Execute();
 
-        _writer.Output.Should().Be("An error occurred while executing command 'testhost'.\n");
+        _ = _writer.Output.Should().Be("An error occurred while executing command 'testhost'.\n");
     }
 
     [Fact]
@@ -163,7 +160,7 @@ public class CommandExecutionTests {
 
         subject.Execute("--option", "abc");
 
-        _writer.Output.Should().Be("An error occurred while reading option 'option'.\nAn error occurred while executing command 'testhost'.\n");
+        _ = _writer.Output.Should().Be("An error occurred while reading option 'option'.\nAn error occurred while executing command 'testhost'.\n");
     }
 
     [Fact]
@@ -172,20 +169,22 @@ public class CommandExecutionTests {
 
         subject.Execute();
 
-        _writer.Output.Should().Be(@"
-Simple.CommandLine 0.1.0-rc1
+        _ = _writer.Output.Should().Be("""
 
-This package provides tools for creating a simple CLI (Command-Line Interface) console application.
+                                        DotNetToolbox.CommandLineBuilder 7.0.0-rc1
 
-Usage: testhost [options]
+                                        This package provides tools for creating a simple CLI (Command-Line Interface) console application.
 
-Options:
-  -h, --help             Show this help information and exit.
-  --no-color             Don't colorize output.
-  -v, --verbose <verbose> Show verbose output.
-  --version              Show version information and exit.
+                                        Usage: testhost [options]
 
-".Replace("\r", ""));
+                                        Options:
+                                          -h, --help             Show this help information and exit.
+                                          --no-color             Don't colorize output.
+                                          -v, --verbose <verbose> Show verbose output.
+                                          --version              Show version information and exit.
+
+
+                                        """.Replace("\r", ""));
     }
 
     [Fact]
@@ -197,13 +196,15 @@ Options:
 
         subject.Execute("sub-Command");
 
-        _writer.Output.Should().Be(@"
-Usage: testhost sub-Command
+        _ = _writer.Output.Should().Be("""
 
-Options:
-  -h, --help             Show this help information and exit.
+                                        Usage: testhost sub-Command
 
-".Replace("\r", ""));
+                                        Options:
+                                          -h, --help             Show this help information and exit.
+
+
+                                        """.Replace("\r", ""));
     }
 
     [Fact]
@@ -212,7 +213,7 @@ Options:
 
         subject.Execute("--version");
 
-        _writer.Output.Should().Be("Simple.CommandLine\n0.1.0-rc1\n");
+        _ = _writer.Output.Should().Be("DotNetToolbox.CommandLineBuilder\n7.0.0-rc1\n");
     }
 
     [Fact]
@@ -226,23 +227,25 @@ Options:
 
         subject.Execute("-h");
 
-        _writer.Output.Should().Be(@"
-Usage: command [parameters] [options]
-Usage: command [options] [command]
+        _ = _writer.Output.Should().Be("""
 
-Options:
-  -h, --help             Show this help information and exit.
-  --options <options>
-  -v, --very-long-name <very-long-name> Some description
+                                   Usage: command [parameters] [options]
+                                   Usage: command [options] [command]
 
-Parameters:
-  <param>
+                                   Options:
+                                     -h, --help             Show this help information and exit.
+                                     --options <options>
+                                     -v, --very-long-name <very-long-name> Some description
 
-Commands:
-  sub-Command
+                                   Parameters:
+                                     <param>
 
-Use ""command [command] --help"" for more information about a command.
+                                   Commands:
+                                     sub-Command
 
-".Replace("\r", ""));
+                                   Use "command [command] --help" for more information about a command.
+
+
+                                   """.Replace("\r", ""));
     }
 }

@@ -29,13 +29,13 @@ public abstract class Command : Token {
 
     public IReadOnlyList<T> GetValuesOrDefault<T>(string nameOrAlias, IReadOnlyList<T>? defaultValue = null) {
         ValidationHelper.ValidateName(nameOrAlias);
-        Argument? argument = Tokens.OfType<Argument>().FirstOrDefaultByNameOrAlias(nameOrAlias);
+        var argument = Tokens.OfType<Argument>().FirstOrDefaultByNameOrAlias(nameOrAlias);
         return GetArgumentValues(argument, nameOrAlias, nameof(nameOrAlias), false, defaultValue);
     }
 
     public IReadOnlyList<T> GetValues<T>(string nameOrAlias) {
         ValidationHelper.ValidateName(nameOrAlias);
-        Argument? argument = Tokens.OfType<Argument>().FirstOrDefaultByNameOrAlias(nameOrAlias);
+        var argument = Tokens.OfType<Argument>().FirstOrDefaultByNameOrAlias(nameOrAlias);
         return GetArgumentValues<T>(argument, nameOrAlias, nameof(nameOrAlias), true);
     }
 
@@ -47,27 +47,27 @@ public abstract class Command : Token {
 
     public T? GetValueOrDefault<T>(string nameOrAlias, T? defaultValue = default) {
         ValidationHelper.ValidateName(nameOrAlias);
-        Argument? argument = Tokens.OfType<Argument>().Except(Tokens.OfType<Options>()).FirstOrDefaultByNameOrAlias(nameOrAlias);
+        var argument = Tokens.OfType<Argument>().Except(Tokens.OfType<Options>()).FirstOrDefaultByNameOrAlias(nameOrAlias);
         return GetArgumentValue(argument, nameOrAlias, nameof(nameOrAlias), false, defaultValue);
     }
 
     public T? GetValueOrDefault<T>(uint index, T? defaultValue = default) {
-        Parameter[] parameters = Tokens.OfType<Parameter>().ToArray();
+        var parameters = Tokens.OfType<Parameter>().ToArray();
         ValidationHelper.ValidateParameterIndex(parameters, index);
-        Parameter parameter = parameters[(int)index];
+        var parameter = parameters[(int)index];
         return GetArgumentValue(parameter, index.ToString(), nameof(index), false, defaultValue);
     }
 
     public T GetValue<T>(string nameOrAlias) {
         ValidationHelper.ValidateName(nameOrAlias);
-        Argument? argument = Tokens.OfType<Argument>().Except(Tokens.OfType<Options>()).FirstOrDefaultByNameOrAlias(nameOrAlias);
+        var argument = Tokens.OfType<Argument>().Except(Tokens.OfType<Options>()).FirstOrDefaultByNameOrAlias(nameOrAlias);
         return GetArgumentValue<T>(argument, nameOrAlias, nameof(nameOrAlias), true)!;
     }
 
     public T GetValue<T>(uint index) {
-        Parameter[] parameters = Tokens.OfType<Parameter>().ToArray();
+        var parameters = Tokens.OfType<Parameter>().ToArray();
         ValidationHelper.ValidateParameterIndex(parameters, index);
-        Parameter parameter = parameters[(int)index];
+        var parameter = parameters[(int)index];
         return GetArgumentValue<T>(parameter, index.ToString(), nameof(index), true)!;
     }
 
@@ -79,7 +79,7 @@ public abstract class Command : Token {
 
     public bool IsFlagSet(string nameOrAlias) {
         ValidationHelper.ValidateName(nameOrAlias);
-        Argument? argument = Tokens.OfType<Argument>().FirstOrDefaultByNameOrAlias(nameOrAlias);
+        var argument = Tokens.OfType<Argument>().FirstOrDefaultByNameOrAlias(nameOrAlias);
         return argument switch {
             null => throw new ArgumentException($"Argument '{nameOrAlias}' not found.", nameof(nameOrAlias)),
             Flag flag => flag.Value,
@@ -96,7 +96,7 @@ public abstract class Command : Token {
     private void Execute(Span<string> arguments) {
         try {
             while (arguments.Length > 0) {
-                if (TryReadFlag(arguments, out arguments, out bool exit)) {
+                if (TryReadFlag(arguments, out arguments, out var exit)) {
                     if (exit) return;
                     continue;
                 }
@@ -126,7 +126,7 @@ public abstract class Command : Token {
     private bool TryReadOption(Span<string> arguments, out Span<string> output) {
         output = arguments;
 
-        Option? option = Tokens.OfType<Option>().FirstOrDefaultByNameOrAlias(output[0]);
+        var option = Tokens.OfType<Option>().FirstOrDefaultByNameOrAlias(output[0]);
         if (option is null) return false;
 
         output = option.Read(this, output[1..]);
@@ -137,7 +137,7 @@ public abstract class Command : Token {
         output = arguments;
         exit = false;
 
-        Flag? flag = Tokens.OfType<Flag>().FirstOrDefaultByNameOrAlias(output[0]);
+        var flag = Tokens.OfType<Flag>().FirstOrDefaultByNameOrAlias(output[0]);
         if (flag is null) return false;
 
         output = flag.Read(this, output[1..]);
@@ -147,15 +147,15 @@ public abstract class Command : Token {
 
     private void ReadParameters(Span<string> arguments, out Span<string> output) {
         output = arguments;
-        foreach (Parameter parameter in Tokens.OfType<Parameter>()) {
+        foreach (var parameter in Tokens.OfType<Parameter>()) {
             _ = parameter.Read(this, output);
             output = output[1..];
         }
     }
 
     private bool TryExecuteSubCommand(Span<string> arguments) {
-        string name = arguments[0].Trim();
-        SubCommand? subCommand = Tokens.OfType<SubCommand>().FirstOrDefaultByName(name);
+        var name = arguments[0].Trim();
+        var subCommand = Tokens.OfType<SubCommand>().FirstOrDefaultByName(name);
         if (subCommand is null) return false;
 
         OnBeforeSubCommand(subCommand);

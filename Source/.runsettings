@@ -8,7 +8,7 @@
 
             <ModulePaths>
               <Include>
-                <ModulePath>.*Simple.CommandLine\..*\.dll$</ModulePath>
+                <ModulePath>.*Tool.*\.dll$</ModulePath>
               </Include>
               <Exclude>
                 <ModulePath>.*fluentvalidation\..*dll$</ModulePath>

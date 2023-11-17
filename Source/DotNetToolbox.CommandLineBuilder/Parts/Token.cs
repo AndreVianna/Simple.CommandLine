@@ -5,7 +5,7 @@ namespace DotNetToolbox.CommandLineBuilder.Parts;
 public abstract partial class Token {
     private static readonly Regex _validName = ValidateName();
 
-    private Token(TokenType type, string name, string? description, bool isPrivate) {
+    protected Token(TokenType type, string name, string? description = null) {
         TokenType = type;
         Name = name.Trim();
         if (string.IsNullOrWhiteSpace(name))
@@ -16,24 +16,20 @@ public abstract partial class Token {
         Description = description ?? string.Empty;
     }
 
-    protected Token(TokenType type, string name, string? description = null)
-        : this(type, name, description, true) {
-    }
-
     private IOutputWriter _writer = default!;
     public IOutputWriter Writer {
         get => _writer;
         internal set {
             _writer = value;
             if (this is not Command command) return;
-            foreach (Token token in command.Tokens) token.Writer = value;
+            foreach (var token in command.Tokens) token.Writer = value;
         }
     }
 
     public Command? Parent { get; set; }
-    internal TokenType TokenType { get; set; }
-    internal string Name { get; set; }
-    internal string Description { get; set; }
+    internal TokenType TokenType { get; }
+    internal string Name { get; }
+    internal string Description { get; }
 
     internal bool Is(string? name) => Name.Equals(name, StringComparison.InvariantCultureIgnoreCase);
 

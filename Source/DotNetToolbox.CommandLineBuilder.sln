@@ -7,17 +7,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0 Solution Items", "0 Solut
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		.runsettings = .runsettings
 		LICENSE = LICENSE
+		Publish.cmd = Publish.cmd
+		PublishAll.cmd = PublishAll.cmd
 		README.md = README.md
-		Repack.cmd = Repack.cmd
-		RepackAll.cmd = RepackAll.cmd
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetToolbox.CommandLineBuilder", "Tool\DotNetToolbox.CommandLineBuilder.csproj", "{ABA38DE9-9904-47D6-B86C-6515CED2963E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetToolbox.CommandLineBuilder", "DotNetToolbox.CommandLineBuilder\DotNetToolbox.CommandLineBuilder.csproj", "{ABA38DE9-9904-47D6-B86C-6515CED2963E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetToolbox.CommandLineBuilder.UnitTests", "UnitTests\DotNetToolbox.CommandLineBuilder.UnitTests.csproj", "{42A24801-6F0E-4EAD-88D8-459942FB01C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetToolbox.CommandLineBuilder.UnitTests", "DotNetToolbox.CommandLineBuilder.UnitTests\DotNetToolbox.CommandLineBuilder.UnitTests.csproj", "{42A24801-6F0E-4EAD-88D8-459942FB01C1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleApp", "Sample\SampleApp.csproj", "{29DB2213-0C94-4457-AE9B-AF26889F405F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleApp", "SampleApp\SampleApp.csproj", "{29DB2213-0C94-4457-AE9B-AF26889F405F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 Package", "1 Package", "{C6E28D8E-6B99-4ACE-AC97-4945E7749D13}"
 EndProject

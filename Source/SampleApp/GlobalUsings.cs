@@ -1,7 +1,7 @@
 // Global using directives
 
-global using DotNetToolbox.CommandLineBuilder.Parts;
-global using DotNetToolbox.CommandLineBuilder.Utilities;
+global using DotNetToolbox.CommandLineBuilder;
+global using DotNetToolbox.CommandLineBuilder.Extensions;
 
 global using SampleApp;
 global using SampleApp.Rest;

@@ -1,4 +1,4 @@
-﻿namespace DotNetToolbox.CommandLineBuilder.Parts;
+﻿namespace DotNetToolbox.CommandLineBuilder;
 
 public abstract class Options : Option {
     protected Options(string name, char alias, string? description = null, Action<Token>? onRead = null)
@@ -6,8 +6,7 @@ public abstract class Options : Option {
     }
 }
 
-public class Options<TValue> : Options, IHasValues<TValue>
-{
+public class Options<TValue> : Options, IHasValues<TValue> {
     private readonly ICollection<TValue> _values = new List<TValue>();
 
     public Options(string name, char alias, string? description = null, Action<Token>? onRead = null)
@@ -20,7 +19,7 @@ public class Options<TValue> : Options, IHasValues<TValue>
     }
 
     public sealed override Type ValueType { get; }
-    public IReadOnlyList<TValue> Values => _values.ToArray(); 
+    public IReadOnlyList<TValue> Values => _values.ToArray();
 
     protected sealed override Span<string> Read(Span<string> arguments) {
         var item = (TValue)Convert.ChangeType(arguments[0], typeof(TValue));

@@ -1,4 +1,4 @@
-﻿namespace DotNetToolbox.CommandLineBuilder.Utilities;
+﻿namespace DotNetToolbox.CommandLineBuilder.TestUtilities;
 
 public abstract class DummyOutputWriter : IOutputWriter {
     public ConsoleColor ForegroundColor {

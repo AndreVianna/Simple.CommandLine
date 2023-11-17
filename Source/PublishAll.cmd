@@ -3,7 +3,7 @@
 if [%1]==[] goto USAGE
 set target=%1
 
-call Publish %target% DotNetToolbox.CommandLineBuilder 7.0.0-rc1
+call Publish %target% DotNetToolbox.CommandLineBuilder 7.0.0
 goto :eof
 
 :USAGE

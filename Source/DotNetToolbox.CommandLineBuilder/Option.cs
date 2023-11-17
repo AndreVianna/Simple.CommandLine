@@ -1,10 +1,8 @@
-﻿namespace DotNetToolbox.CommandLineBuilder.Parts;
+﻿namespace DotNetToolbox.CommandLineBuilder;
 
-public abstract class Option : Argument
-{
+public abstract class Option : Argument {
     protected Option(string name, char alias, string? description = null, Action<Token>? onRead = null)
-        : base(TokenType.Option, name, alias, description, onRead)
-    {
+        : base(TokenType.Option, name, alias, description, onRead) {
     }
 }
 

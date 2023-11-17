@@ -1,6 +1,4 @@
-﻿using DotNetToolbox.CommandLineBuilder.Utilities;
-
-namespace DotNetToolbox.CommandLineBuilder;
+﻿namespace DotNetToolbox.CommandLineBuilder;
 
 public sealed class CommandBuilder {
     private readonly bool _isRoot;

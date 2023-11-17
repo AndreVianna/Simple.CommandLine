@@ -1,6 +1,4 @@
-﻿using DotNetToolbox.CommandLineBuilder.Utilities;
-
-namespace DotNetToolbox.CommandLineBuilder.Defaults;
+﻿namespace DotNetToolbox.CommandLineBuilder.Defaults;
 
 internal sealed class VersionFlag : Flag
 {

@@ -1,4 +1,6 @@
-﻿namespace DotNetToolbox.CommandLineBuilder;
+﻿using DotNetToolbox.CommandLineBuilder.Extensions;
+
+namespace DotNetToolbox.CommandLineBuilder;
 
 public class CommandExecutionTests {
     private readonly InMemoryOutputWriter _writer = new();
@@ -171,17 +173,17 @@ public class CommandExecutionTests {
 
         _ = _writer.Output.Should().Be("""
 
-                                        DotNetToolbox.CommandLineBuilder 7.0.0-rc1
+                                        DotNetToolbox.CommandLineBuilder 7.0.0
 
                                         This package provides tools for creating a simple CLI (Command-Line Interface) console application.
 
                                         Usage: testhost [options]
 
                                         Options:
-                                          -h, --help             Show this help information and exit.
-                                          --no-color             Don't colorize output.
-                                          -v, --verbose <verbose> Show verbose output.
-                                          --version              Show version information and exit.
+                                          -h, --help                    Show this help information and exit.
+                                          --no-color                    Don't colorize output.
+                                          -v, --verbose <verbose>       Show verbose output.
+                                          --version                     Show version information and exit.
 
 
                                         """.Replace("\r", ""));
@@ -201,7 +203,7 @@ public class CommandExecutionTests {
                                         Usage: testhost sub-Command
 
                                         Options:
-                                          -h, --help             Show this help information and exit.
+                                          -h, --help                    Show this help information and exit.
 
 
                                         """.Replace("\r", ""));
@@ -213,7 +215,7 @@ public class CommandExecutionTests {
 
         subject.Execute("--version");
 
-        _ = _writer.Output.Should().Be("DotNetToolbox.CommandLineBuilder\n7.0.0-rc1\n");
+        _ = _writer.Output.Should().Be("DotNetToolbox.CommandLineBuilder\n7.0.0\n");
     }
 
     [Fact]
@@ -233,7 +235,7 @@ public class CommandExecutionTests {
                                    Usage: command [options] [command]
 
                                    Options:
-                                     -h, --help             Show this help information and exit.
+                                     -h, --help                    Show this help information and exit.
                                      --options <options>
                                      -v, --very-long-name <very-long-name> Some description
 

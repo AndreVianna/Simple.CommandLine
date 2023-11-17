@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <PackageId>DotNetToolbox.CommandLineBuilder</PackageId>
     <Title>DotNetToolbox Command-Line Interface (CLI) Builder Library</Title>
-    <Version>7.0.0-rc1</Version>
+    <Version>7.0.0</Version>
     <Authors>Andre Vianna</Authors>
     <Company>D0tN3tC0d3r5</Company>
     <PackageTags>Command-Line, CLI, Tools</PackageTags>

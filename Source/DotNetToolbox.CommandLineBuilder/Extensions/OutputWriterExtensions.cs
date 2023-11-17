@@ -1,6 +1,6 @@
-﻿namespace DotNetToolbox.CommandLineBuilder.Utilities;
+﻿namespace DotNetToolbox.CommandLineBuilder.Extensions;
 
-public static class WriterUtilities {
+public static class OutputWriterExtensions {
     public static void WriteVersion(this IOutputWriter writer, Command command) {
         var assembly = command.GetType().Assembly;
         writer.WriteLine(GetAssemblyTitle(assembly));
@@ -93,7 +93,7 @@ public static class WriterUtilities {
 
         if (token.Description.Length == 0) return builder.ToString();
 
-        var padding = 25;
+        var padding = 32;
         var length = builder.Length;
         if (padding <= length) padding = length + 1;
         _ = builder.Append(' ', padding - length);

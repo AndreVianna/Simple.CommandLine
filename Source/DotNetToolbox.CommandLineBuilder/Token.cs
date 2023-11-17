@@ -1,6 +1,4 @@
-﻿using DotNetToolbox.CommandLineBuilder.Utilities;
-
-namespace DotNetToolbox.CommandLineBuilder.Parts;
+﻿namespace DotNetToolbox.CommandLineBuilder;
 
 public abstract partial class Token {
     private static readonly Regex _validName = ValidateName();

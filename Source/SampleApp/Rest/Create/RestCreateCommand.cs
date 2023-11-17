@@ -1,17 +1,14 @@
 ﻿namespace SampleApp.Rest.Create;
 
-internal sealed class RestCreateCommand : SubCommand
-{
+internal sealed class RestCreateCommand : SubCommand {
     public RestCreateCommand() : base("create", "Create the initial api project.") {
         Add(new NameParameter());
         Add(new OutputOption());
     }
 
-    protected override void OnExecute()
-    {
+    protected override void OnExecute() {
         var name = GetValueOrDefault<string>("NAME");
-        if (name is null)
-        {
+        if (name is null) {
             Writer.WriteError("The name of the project is required.");
             return;
         }

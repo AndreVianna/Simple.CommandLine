@@ -1,7 +1,6 @@
-﻿namespace DotNetToolbox.CommandLineBuilder.Parts;
+﻿namespace DotNetToolbox.CommandLineBuilder;
 
-public enum VerboseLevel
-{
+public enum VerboseLevel {
     Trace = 0,
     Debug = 1,
     Normal = 2,

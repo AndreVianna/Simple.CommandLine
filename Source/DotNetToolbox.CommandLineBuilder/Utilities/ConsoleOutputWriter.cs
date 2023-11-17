@@ -1,7 +1,7 @@
 ﻿namespace DotNetToolbox.CommandLineBuilder.Utilities;
 
 [ExcludeFromCodeCoverage(Justification = "Testing the system.")]
-public sealed class ConsoleOutputWriter : IOutputWriter {
+internal sealed class ConsoleOutputWriter : IOutputWriter {
     public bool UseColors { get; set; } = true;
     public VerboseLevel VerboseLevel { get; set; } = VerboseLevel.Normal;
 

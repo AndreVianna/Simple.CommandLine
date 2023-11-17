@@ -2,7 +2,7 @@
 
 public class DummyOutputTests
 {
-    private sealed class TestOutputWriter : DummyOutputWriter { }
+    private sealed class TestOutputWriter : TestUtilities.DummyOutputWriter { }
 
     [Fact]
     public void DummyOutput_AllProperties_Throw()

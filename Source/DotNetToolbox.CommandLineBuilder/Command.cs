@@ -1,6 +1,4 @@
-﻿using DotNetToolbox.CommandLineBuilder.Utilities;
-
-namespace DotNetToolbox.CommandLineBuilder.Parts;
+﻿namespace DotNetToolbox.CommandLineBuilder;
 
 public abstract class Command : Token {
     private readonly Action<Command> _onExecute;
@@ -159,7 +157,7 @@ public abstract class Command : Token {
         if (subCommand is null) return false;
 
         OnBeforeSubCommand(subCommand);
-        subCommand.Execute(arguments);
+        subCommand.Execute(arguments[1..]);
         OnAfterSubCommand(subCommand);
         return true;
     }

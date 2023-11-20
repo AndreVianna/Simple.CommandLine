@@ -18,7 +18,7 @@ public abstract partial class Argument : Token {
 
     internal bool Is(char candidate) => Alias != '\0' && Alias == candidate;
 
-    internal Span<string> Read(Command caller, Span<string> arguments) {
+    internal string[] Read(CommandBase caller, string[] arguments) {
         try {
             arguments = Read(arguments);
             OnRead(caller, arguments.ToArray());
@@ -31,9 +31,9 @@ public abstract partial class Argument : Token {
         }
     }
 
-    protected abstract Span<string> Read(Span<string> arguments);
+    protected abstract string[] Read(string[] arguments);
 
-    protected virtual void OnRead(Command caller, IEnumerable<string> arguments) => _onRead?.Invoke(this);
+    protected virtual void OnRead(CommandBase caller, IEnumerable<string> arguments) => _onRead?.Invoke(this);
 
     [GeneratedRegex("^[a-zA-Z0-9]$", RegexOptions.Compiled)]
     private static partial Regex MyRegex();

@@ -1,19 +1,19 @@
 ﻿namespace DotNetToolbox.CommandLineBuilder.Extensions;
 
 public static class OutputWriterExtensions {
-    public static void WriteVersion(this IOutputWriter writer, Command command) {
+    public static void WriteVersion(this IOutputWriter writer, CommandBase command) {
         var assembly = command.GetType().Assembly;
         writer.WriteLine(GetAssemblyTitle(assembly));
         writer.WriteLine(GetAssemblyVersion(assembly));
     }
 
-    public static void WriteHelp(this IOutputWriter writer, Command command) {
+    public static void WriteHelp(this IOutputWriter writer, CommandBase command) {
         if (command is RootCommand) writer.WriteRootHeader(command);
 
         var parameters = command.Tokens.OfType<Parameter>().Cast<Token>().ToArray();
         var options = command.Tokens.OfType<Option>().Cast<Token>().ToArray();
         var flags = command.Tokens.OfType<Flag>().Cast<Token>().ToArray();
-        var subCommands = command.Tokens.OfType<SubCommand>().Cast<Token>().ToArray();
+        var subCommands = command.Tokens.OfType<Command>().Cast<Token>().ToArray();
 
         writer.WriteLine();
         if (parameters.Length != 0) writer.WriteLine($"Usage: {command.Path} [parameters]{(options.Length != 0 ? " [options]" : "")}");
@@ -51,7 +51,7 @@ public static class OutputWriterExtensions {
     }
 
     [ExcludeFromCodeCoverage]
-    private static void WriteRootHeader(this IOutputWriter writer, Command command) {
+    private static void WriteRootHeader(this IOutputWriter writer, CommandBase command) {
         var assembly = command.GetType().Assembly;
         writer.WriteLine();
         writer.WriteLine($"{GetAssemblyTitle(assembly)} {GetAssemblyVersion(assembly)}");
@@ -71,23 +71,23 @@ public static class OutputWriterExtensions {
 
     private static string DescribeToken(Token token) {
         StringBuilder builder = new();
-        _ = builder.Append(' ', 2);
+        builder.Append(' ', 2);
 
         switch (token) {
             case Parameter:
-                _ = builder.Append('<').Append(token.Name).Append('>');
+                builder.Append('<').Append(token.Name).Append('>');
                 break;
             case Option option:
-                if (option.Alias != '\0') _ = builder.Append('-').Append(option.Alias).Append(", ");
-                _ = builder.Append("--").Append(token.Name);
-                if (option is IHasValue) _ = builder.Append(" <").Append(token.Name).Append('>');
+                if (option.Alias != '\0') builder.Append('-').Append(option.Alias).Append(", ");
+                builder.Append("--").Append(token.Name);
+                if (option is IHasValue) builder.Append(" <").Append(token.Name).Append('>');
                 break;
             case Flag flag:
-                if (flag.Alias != '\0') _ = builder.Append('-').Append(flag.Alias).Append(", ");
-                _ = builder.Append("--").Append(token.Name);
+                if (flag.Alias != '\0') builder.Append('-').Append(flag.Alias).Append(", ");
+                builder.Append("--").Append(token.Name);
                 break;
             default:
-                _ = builder.Append(token.Name);
+                builder.Append(token.Name);
                 break;
         }
 
@@ -96,9 +96,9 @@ public static class OutputWriterExtensions {
         var padding = 32;
         var length = builder.Length;
         if (padding <= length) padding = length + 1;
-        _ = builder.Append(' ', padding - length);
+        builder.Append(' ', padding - length);
 
-        _ = builder.Append(token.Description);
+        builder.Append(token.Description);
         return builder.ToString();
     }
 

@@ -14,5 +14,5 @@ public class Flag : Argument, IHasValue<bool> {
     public sealed override Type ValueType { get; }
     public bool Value => IsSet;
     public bool ExitsIfTrue { get; }
-    protected sealed override Span<string> Read(Span<string> arguments) => arguments;
+    protected sealed override string[] Read(string[] arguments) => arguments;
 }

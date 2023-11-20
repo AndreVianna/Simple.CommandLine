@@ -3,7 +3,7 @@
 public class CommandConfigurationTests {
     [Fact]
     public void Command_AddOption_AddsOption() {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
 
         subject.Add(new Option<string>("option", 'o', description: "Option description."));
 
@@ -12,7 +12,7 @@ public class CommandConfigurationTests {
 
     [Fact]
     public void Command_AddOption_WithEmptyName_Throws() {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
 
         var action = () => subject.Add(new Option<string>(""));
 
@@ -21,7 +21,7 @@ public class CommandConfigurationTests {
 
     [Fact]
     public void Command_AddOption_WithEmptyAlias_Throws() {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
 
         var action = () => subject.Add(new Option<string>("option", '!'));
 
@@ -30,7 +30,7 @@ public class CommandConfigurationTests {
 
     [Fact]
     public void Command_AddOption_InvalidEmptyName_Throws() {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
 
         var action = () => subject.Add(new Option<string>("!123"));
 
@@ -40,7 +40,7 @@ public class CommandConfigurationTests {
     [Fact]
     public void Command_AddFlag_WithDuplicatedName_Throws()
     {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
         subject.Add(new Flag("flag", 'f', description: "Flag description."));
 
         var action = () => subject.Add(new Flag("flag"));
@@ -51,7 +51,7 @@ public class CommandConfigurationTests {
     [Fact]
     public void Command_AddFlag_WithDuplicatedAlias_Throws()
     {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
         subject.Add(new Flag("flag", 'f', description: "Flag description."));
 
         var action = () => subject.Add(new Flag("first", 'f'));
@@ -61,7 +61,7 @@ public class CommandConfigurationTests {
 
     [Fact]
     public void Command_AddMultiOption_AddsOption() {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
 
         subject.Add(new Options<string>("option", 'o', "Option description."));
 
@@ -70,7 +70,7 @@ public class CommandConfigurationTests {
 
     [Fact]
     public void Command_AddFlag_WithFlag_AddsOption() {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
 
         subject.Add(new Flag("flag", 'f', "Flag description."));
 
@@ -79,7 +79,7 @@ public class CommandConfigurationTests {
 
     [Fact]
     public void Command_AddParameter_AddsParameter() {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
 
         subject.Add(new Parameter<int>("parameter", "Parameter description."));
 
@@ -88,9 +88,9 @@ public class CommandConfigurationTests {
 
     [Fact]
     public void Command_AddCommand_AddsSubCommand() {
-        var subject = new SubCommand("command");
+        var subject = new Command("command");
 
-        subject.Add(new SubCommand("sub-command", "Sub command description."));
+        subject.Add(new Command("sub-command", "Sub command description."));
 
         subject.Tokens.Should().HaveCount(2).And.Contain(i => i.Name == "sub-command");
     }

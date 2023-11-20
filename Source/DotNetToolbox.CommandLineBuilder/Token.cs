@@ -19,12 +19,12 @@ public abstract partial class Token {
         get => _writer;
         internal set {
             _writer = value;
-            if (this is not Command command) return;
+            if (this is not CommandBase command) return;
             foreach (var token in command.Tokens) token.Writer = value;
         }
     }
 
-    public Command? Parent { get; set; }
+    public CommandBase? Parent { get; set; }
     internal TokenType TokenType { get; }
     internal string Name { get; }
     internal string Description { get; }

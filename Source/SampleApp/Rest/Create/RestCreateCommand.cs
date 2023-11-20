@@ -1,16 +1,17 @@
 ﻿namespace SampleApp.Rest.Create;
 
-internal sealed class RestCreateCommand : SubCommand {
+internal sealed class RestCreateCommand : Command<RestCreateCommand> {
     public RestCreateCommand() : base("create", "Create the initial api project.") {
         Add(new NameParameter());
         Add(new OutputOption());
+        OnExecute += (_, _) => Execute();
     }
 
-    protected override void OnExecute() {
+    private Task Execute() {
         var name = GetValueOrDefault<string>("NAME");
         if (name is null) {
             Writer.WriteError("The name of the project is required.");
-            return;
+            return Task.CompletedTask;
         }
 
         var outputPath = GetValueOrDefault<string>("output");
@@ -22,5 +23,6 @@ internal sealed class RestCreateCommand : SubCommand {
         }
 
         Writer.WriteLine("Done.");
+        return Task.CompletedTask;
     }
 }

@@ -1,1 +1,1 @@
-﻿MainCommand.Execute(args);
+﻿await MainCommand.Execute(args);

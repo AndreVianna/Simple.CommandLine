@@ -2,27 +2,29 @@
 
 public class RootCommandTests {
     [Fact]
-    public void RootCommand_Execute_WithWriter_ExecutesDelegate() {
+    public async Task RootCommand_Execute_WithWriter_ExecutesDelegate() {
         InMemoryOutputWriter writer = new();
-        RootCommand subject = new(writer, c => {
-            var who = c.GetValueOrDefault<string>("who");
-            c.Writer.WriteLine($"Hello {who}!");
-        });
+        RootCommand subject = new(writer);
+        subject.OnExecute += (cmd, ct) => Task.Run(() => {
+            var who = cmd.GetValueOrDefault<string>("who");
+            cmd.Writer.WriteLine($"Hello {who}!");
+        }, ct);
         subject.Add(new Parameter<string>("who"));
 
-        subject.Execute("world");
+        await subject.Execute("world");
 
-        _ = writer.Output.Should().Be("Hello world!\n");
+        writer.Output.Should().Be("Hello world!\n");
     }
 
     [Fact]
-    public void RootCommand_Execute_ExecutesDelegate() {
-        RootCommand subject = new(null, c => {
-            var who = c.GetValueOrDefault<string>("who");
-            c.Writer.WriteLine($"Hello {who}!");
-        });
+    public Task RootCommand_Execute_WithoutWriter_ExecutesDelegate() {
+        RootCommand subject = new();
+        subject.OnExecute += (cmd, ct) => Task.Run(() => {
+            var who = cmd.GetValueOrDefault<string>("who");
+            cmd.Writer.WriteLine($"Hello {who}!");
+        }, ct);
         subject.Add(new Parameter<string>("who"));
 
-        subject.Execute("world");
+        return subject.Execute("world");
     }
 }

@@ -21,7 +21,7 @@ public class Options<TValue> : Options, IHasValues<TValue> {
     public sealed override Type ValueType { get; }
     public IReadOnlyList<TValue> Values => _values.ToArray();
 
-    protected sealed override Span<string> Read(Span<string> arguments) {
+    protected sealed override string[] Read(string[] arguments) {
         var item = (TValue)Convert.ChangeType(arguments[0], typeof(TValue));
         _values.Add(item);
         return arguments[1..];

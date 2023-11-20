@@ -1,18 +1,25 @@
 ﻿namespace DotNetToolbox.CommandLineBuilder;
 
-public sealed class CommandBuilder {
+public static class CommandBuilder {
+    public static CommandBuilder<TRootCommand> From<TRootCommand>(IOutputWriter? writer = null)
+        where TRootCommand : CommandBase<TRootCommand>
+        => new(writer);
+
+    public static CommandBuilder<RootCommand> FromDefaultRoot(IOutputWriter? writer = null) => From<RootCommand>(writer);
+}
+
+public sealed class CommandBuilder<TCommand>
+    where TCommand : CommandBase<TCommand> {
     private readonly bool _isRoot;
     private readonly string? _name;
     private readonly string? _description;
     private readonly IOutputWriter? _writer;
 
-    private Action<Command>? _onExecute;
-    private Action<Command, Command>? _onBeforeSubCommand;
-    private Action<Command, Command>? _onAfterSubCommand;
+    private Func<TCommand, CancellationToken, Task>? _onExecute;
 
-    private readonly ICollection<Func<Command, Command>> _steps = new List<Func<Command, Command>>();
+    private readonly ICollection<Func<CommandBase, CommandBase>> _steps = new List<Func<CommandBase, CommandBase>>();
 
-    private CommandBuilder(IOutputWriter? writer = null) {
+    internal CommandBuilder(IOutputWriter? writer = null) {
         _isRoot = true;
         _writer = writer ?? new ConsoleOutputWriter();
     }
@@ -23,52 +30,83 @@ public sealed class CommandBuilder {
         _description = description;
     }
 
-    public static CommandBuilder FromRoot(IOutputWriter? writer = null) => new(writer);
-
-    public CommandBuilder OnExecute(Action<Command> onExecute) {
-        _onExecute = onExecute ?? throw new ArgumentNullException(nameof(onExecute));
+    public CommandBuilder<TCommand> OnExecute(Action onExecute) {
+        _onExecute = (_, ct) => Task.Run(onExecute, ct);
         return this;
     }
 
-    public CommandBuilder OnBeforeSubCommand(Action<Command, Command> onBeforeExecuteChild) {
-        _onBeforeSubCommand = onBeforeExecuteChild ?? throw new ArgumentNullException(nameof(onBeforeExecuteChild));
+    public CommandBuilder<TCommand> OnExecute(Action<CommandBase> onExecute) {
+        _onExecute = (cmd, ct) => Task.Run(() => onExecute(cmd), ct);
         return this;
     }
 
-    public CommandBuilder OnAfterSubCommand(Action<Command, Command> onAfterExecuteChild) {
-        _onAfterSubCommand = onAfterExecuteChild ?? throw new ArgumentNullException(nameof(onAfterExecuteChild));
+    public CommandBuilder<TCommand> OnExecute(Func<Task> onExecute) {
+        _onExecute = (_, _) => onExecute();
         return this;
     }
 
-    public CommandBuilder AddFlag(string name, string? description = null, bool existsIfSet = false, Action<Token>? onRead = null)
+    public CommandBuilder<TCommand> OnExecute(Func<CommandBase, Task> onExecute) {
+        _onExecute = (cmd, _) => onExecute(cmd);
+        return this;
+    }
+
+    public CommandBuilder<TCommand> OnExecute(Func<CancellationToken, Task> onExecute) {
+        _onExecute = (_, ct) => onExecute(ct);
+        return this;
+    }
+
+    public CommandBuilder<TCommand> OnExecute(Func<CommandBase, CancellationToken, Task> onExecute) {
+        _onExecute = onExecute;
+        return this;
+    }
+
+    public CommandBuilder<TCommand> AddFlag(string name, string? description = null, bool existsIfSet = false, Action<Token>? onRead = null)
         => AddFlag(name, '\0', description, existsIfSet, onRead);
 
-    public CommandBuilder AddFlag(string name, char alias, string? description = null, bool existsIfSet = false, Action<Token>? onRead = null)
+    public CommandBuilder<TCommand> AddFlag(string name, char alias, string? description = null, bool existsIfSet = false, Action<Token>? onRead = null)
         => Add(new Flag(name, alias, description, existsIfSet, onRead));
 
-    public CommandBuilder AddOptions<T>(string name, string? description = null, Action<Token>? onRead = null)
+    public CommandBuilder<TCommand> AddOptions<T>(string name, string? description = null, Action<Token>? onRead = null)
         => AddOptions<T>(name, '\0', description, onRead);
 
-    public CommandBuilder AddOptions<T>(string name, char alias, string? description = null, Action<Token>? onRead = null)
+    public CommandBuilder<TCommand> AddOptions<T>(string name, char alias, string? description = null, Action<Token>? onRead = null)
         => Add(new Options<T>(name, alias, description, onRead));
 
-    public CommandBuilder AddOption<T>(string name, string? description = null, Action<Token>? onRead = null)
+    public CommandBuilder<TCommand> AddOption<T>(string name, string? description = null, Action<Token>? onRead = null)
         => AddOption<T>(name, '\0', description, onRead);
 
-    public CommandBuilder AddOption<T>(string name, char alias, string? description = null, Action<Token>? onRead = null)
+    public CommandBuilder<TCommand> AddOption<T>(string name, char alias, string? description = null, Action<Token>? onRead = null)
         => Add(new Option<T>(name, alias, description, onRead));
 
-    public CommandBuilder AddParameter<T>(string name, string? description = null, Action<Token>? onRead = null)
+    public CommandBuilder<TCommand> AddParameter<T>(string name, string? description = null, Action<Token>? onRead = null)
         => Add(new Parameter<T>(name, description, onRead));
 
-    public CommandBuilder AddSubCommand(string name, string? description = null, Action<CommandBuilder>? setup = null) {
-        CommandBuilder builder = new(name, description);
-        setup?.Invoke(builder);
-        _ = Add(builder.Build());
+    public CommandBuilder<TCommand> AddChildCommand(string name, string? description = null)
+        => AddChildCommand(name, description, null);
+
+    public CommandBuilder<TCommand> AddChildCommand(string name, Action<CommandBuilder<Command>> build)
+        => AddChildCommand(name, null, build);
+
+    public CommandBuilder<TCommand> AddChildCommand(string name, string? description, Action<CommandBuilder<Command>>? build)
+        => AddChildCommand<Command>(name, description, build);
+
+    public CommandBuilder<TCommand> AddChildCommand<TChildCommand>(string name, string? description = null)
+        where TChildCommand : CommandBase<TChildCommand>
+        => AddChildCommand<TChildCommand>(name, description, null);
+
+    public CommandBuilder<TCommand> AddChildCommand<TChildCommand>(string name, Action<CommandBuilder<TChildCommand>> build)
+        where TChildCommand : CommandBase<TChildCommand>
+        => AddChildCommand(name, null, build);
+
+    public CommandBuilder<TCommand> AddChildCommand<TChildCommand>(string name, string? description, Action<CommandBuilder<TChildCommand>>? build)
+        where TChildCommand : CommandBase<TChildCommand> {
+        CommandBuilder<TChildCommand> builder = new(name, description);
+        build?.Invoke(builder);
+        Add(builder.Build());
         return this;
     }
 
-    public CommandBuilder Add(Token token) {
+    public CommandBuilder<TCommand> Add(Token token) {
         _steps.Add(parent => {
             parent.Add(token);
             return parent;
@@ -76,10 +114,11 @@ public sealed class CommandBuilder {
         return this;
     }
 
-    public Command Build() {
-        Command command = _isRoot
-            ? new RootCommand(_writer, _onExecute, _onBeforeSubCommand, _onAfterSubCommand)
-            : new SubCommand(_name!, _description, _onExecute, _onBeforeSubCommand, _onAfterSubCommand);
-        return _steps.Aggregate(command, (current, step) => step(current));
+    public TCommand Build() {
+        var command = _isRoot
+            ? (TCommand)Activator.CreateInstance(typeof(TCommand), _writer)!
+            : (TCommand)Activator.CreateInstance(typeof(TCommand), _name!, _description)!;
+        if (_onExecute is not null) command.OnExecute += _onExecute;
+        return (TCommand)_steps.Aggregate((CommandBase)command, (current, step) => step(current));
     }
 }

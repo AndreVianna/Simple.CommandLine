@@ -19,7 +19,7 @@ public class Option<TValue> : Option, IHasValue<TValue> {
     public sealed override Type ValueType { get; }
     public TValue Value { get; private set; } = default!;
 
-    protected sealed override Span<string> Read(Span<string> arguments) {
+    protected sealed override string[] Read(string[] arguments) {
         Value = (TValue)Convert.ChangeType(arguments[0], typeof(TValue));
         return arguments[1..];
     }
